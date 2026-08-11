@@ -20,8 +20,8 @@ Rechne mit 30 bis 45 Minuten, das meiste davon Wartezeit beim Aktualisieren.
 | Display + HDMI-Kabel | Querformat |
 | Tastatur und Maus | nur für die Einrichtung, danach nicht mehr |
 | Netzwerk | LAN oder WLAN, dauerhaft |
-| Tonausgabe | **wichtig:** der Pi 5 hat *keinen* Klinkenausgang. Lautsprecher im Display über HDMI, USB-Lautsprecher oder USB-Audioadapter |
-| Taster (optional) | einfacher Schließer mit zwei Drähten, für das Abschalten des Alarmtons |
+| Alarmton | **entweder** ein passiver Piezo-Summer (Standard, zwei Drähte an die Stiftleiste) **oder** eine Tonausgabe am Pi. Achtung: der Pi 5 hat *keinen* Klinkenausgang, es bleiben HDMI-Lautsprecher im Display, USB-Lautsprecher oder ein USB-Audioadapter |
+| Taster (optional) | drei einfache Schließer mit je zwei Drähten |
 
 Außerdem die ICS-Adressen deiner Kalender. Wie du die bekommst, steht in
 [README.md](README.md) im Abschnitt „Kalender-URLs beschaffen". Du kannst sie
@@ -88,9 +88,29 @@ sudo raspi-config
 
 ---
 
-## Schritt 4 – Tonausgabe wählen
+## Schritt 4 – Alarmton: Summer oder Lautsprecher
 
-Nur nötig, wenn du den Alarmton nutzen willst.
+Nur nötig, wenn du den Alarmton nutzen willst. Es gibt zwei Wege, umschaltbar
+später im Zahnrad unter *Alarm* → *Ausgabe*.
+
+### Variante 1 – Piezo-Summer (Standard)
+
+Ein passiver Piezo-Summer wird direkt an die Stiftleiste geklemmt, zwischen
+**Pin 12 (GPIO 18)** und **Pin 14 (GND)**. Die Verdrahtung steht bei den
+Tastern in Schritt 8, dort passt es in einem Aufwasch.
+
+Der Vorteil: Den Ton erzeugt der Dienst selbst. Er klingelt deshalb auch, wenn
+der Bildschirm aus ist oder der Browser hängt. Der Klang ist dafür schlicht,
+ein Piezo kann nur Tonhöhen.
+
+Achte beim Kauf auf **passiv** („passive buzzer", ohne eigene Elektronik) – ein
+aktiver Summer kann nur einen einzigen festen Ton. Einen richtigen Lautsprecher
+darfst du **nicht** direkt an GPIO hängen, das überlastet den Pin.
+
+Sonst ist an dieser Stelle nichts zu tun; die Einstellung steht schon auf
+Summer.
+
+### Variante 2 – Lautsprecher
 
 Schließe die Tonquelle an (Display über HDMI, USB-Lautsprecher oder
 USB-Adapter). Dann **Rechtsklick auf das Lautsprechersymbol** oben rechts in
@@ -105,6 +125,9 @@ speaker-test -c2 -t wav -l1
 
 Hörst du nichts, prüfe die Geräteauswahl und ob am Display der Ton nicht
 stummgeschaltet ist.
+
+Diese Variante musst du später im Zahnrad unter *Alarm* → *Ausgabe* auf
+**Lautsprecher** umstellen, sonst bleibt es still.
 
 ---
 
@@ -156,13 +179,18 @@ Dateien eine Ebene tiefer. Der Unterordner `.venv` wird mitkopiert und ist
 unbrauchbar – das Installationsskript legt ihn selbst neu an, du musst dich
 nicht darum kümmern.
 
-### Variante C – Aus einem Git-Repository
+### Variante C – Aus dem Git-Repository (empfohlen)
 
-Wenn du das Projekt in ein Repository gelegt hast:
+Das Projekt liegt unter `https://github.com/Hawk0112/kalender`. Damit wird aus
+jedem späteren Update ein Zweizeiler:
 
 ```bash
-git clone <adresse-deines-repos> ~/kalender
+git clone https://github.com/Hawk0112/kalender.git ~/kalender
 ```
+
+Ist das Repository privat, fragt der Befehl nach Benutzername und einem
+Zugriffstoken von GitHub. Weiteres dazu im Abschnitt „Neue Programmfassung
+einspielen".
 
 ### In jedem Fall danach prüfen
 
@@ -237,25 +265,30 @@ sudo systemctl restart kalender
 
 ---
 
-## Schritt 8 – Taster anschließen (optional)
+## Schritt 8 – Taster und Summer anschließen (optional)
 
 **Vorher den Pi ausschalten und vom Strom trennen.**
 
-Drei Taster, alle mit gemeinsamer Masse an **Pin 9 (GND)**:
+Drei Taster an einer gemeinsamen Masse (**Pin 9**) und der Summer an seiner
+eigenen (**Pin 14**):
 
 ```
         3V3  (1) (2)  5V
       GPIO2  (3) (4)  5V
       GPIO3  (5) (6)  GND
       GPIO4  (7) (8)  GPIO14
-        GND  (9) (10) GPIO15   <- Pin 9  = GND, gemeinsam für alle drei
-     GPIO17 (11) (12) GPIO18   <- Pin 11 = Taster 1
-     GPIO27 (13) (14) GND      <- Pin 13 = Taster 2
+        GND  (9) (10) GPIO15   <- Pin 9  = GND, gemeinsam für die drei Taster
+     GPIO17 (11) (12) GPIO18   <- Pin 11 = Taster 1   | Pin 12 = Summer (+)
+     GPIO27 (13) (14) GND      <- Pin 13 = Taster 2   | Pin 14 = Summer (−)
      GPIO22 (15) (16) GPIO23   <- Pin 15 = Taster 3
 ```
 
 Jeder Taster bekommt einen Draht auf seinen Signalstift und einen auf die
 gemeinsame Masse. Ein Widerstand ist nicht nötig, die Polung ist egal.
+
+Der Summer kommt zwischen Pin 12 und Pin 14 – die beiden liegen direkt
+nebeneinander. Piezo-Summer sind meist gepolt, achte auf die Markierung: Der
+markierte Anschluss gehört an Pin 12.
 
 | Taster | Wirkung |
 |---|---|
@@ -304,7 +337,9 @@ Geh diese Liste durch:
 - [ ] Oben rechts steht „aktualisiert HH:MM" mit einem grünen Punkt.
 - [ ] Die Uhr oben rechts geht richtig.
 - [ ] Der Bildschirm wird nach 10 Minuten nicht dunkel.
-- [ ] Der Alarmton lässt sich im Zahnrad unter *Alarm* mit **Ton anhören** hören.
+- [ ] Der Alarmton lässt sich im Zahnrad unter *Alarm* mit **Ton anhören**
+      hören – bei der Ausgabe *Summer* piept das Piezo-Element, bei
+      *Lautsprecher* kommt der Ton aus der Tonausgabe.
 - [ ] Taster 1 beendet den Probeton (falls angeschlossen).
 - [ ] Taster 2 und 3 blättern eine Woche vor und zurück, oben erscheint dabei
       der Hinweis „1 Woche voraus" bzw. „1 Woche zurück".
@@ -327,12 +362,13 @@ Vollbild wieder herauskommst, steht weiter unten.
 | Anzeige leer, oben rechts „offline" | Kalenderadresse falsch oder kein Netz. Im Zahnrad den Knopf **Testen** benutzen. |
 | Falscher Tag ganz links | Zeitzone oder Uhrzeit falsch: `timedatectl`, siehe Schritt 1. |
 | Termine um Stunden verschoben | Zeitzone im Kalender: im Zahnrad unter *Allgemein* muss `Europe/Vienna` stehen. |
-| Kein Alarmton, Leiste erscheint aber | Tonausgabe prüfen (Schritt 4). Steht in der Anzeige „Ton stummgeschaltet", hat Chromium den Ton blockiert – dann läuft der Kiosk noch mit alten Einstellungen: `bash ~/kalender/install.sh` erneut ausführen und neu starten. |
+| Kein Alarmton, Anzeige erscheint aber | Erst im Zahnrad unter *Alarm* prüfen, ob die **Ausgabe** zu deiner Hardware passt. Beim Summer: steht dort „Summer nicht verfügbar", prüfe die Verdrahtung an Pin 12/14 und `journalctl -u kalender -n 30`. Beim Lautsprecher: Tonausgabe prüfen (Schritt 4); steht dort „Ton stummgeschaltet", läuft der Kiosk noch mit alten Einstellungen – `bash ~/kalender/install.sh` erneut ausführen und neu starten. |
 | Taster tut nichts | `journalctl -u kalender -n 50` ansehen. Beim Start muss je Taster eine Zeile wie `Taster 'forward' aktiv an GPIO27` stehen. Fehlt sie, prüfe die Verdrahtung. Bei einer Rechtemeldung: `sudo usermod -aG gpio $USER`, dann neu starten. |
 | Ansicht steht auf der falschen Woche | Taster 1 kurz drücken (oder `Pos1` auf der Tastatur); nach fünf Minuten springt sie ohnehin von selbst zurück. Neben dem Datum steht, um wie viele Wochen sie verschoben ist. |
 | Langes Halten startet nicht neu | Im Protokoll steht `Neustart fehlgeschlagen`. Dann fehlt die sudo-Regel: `ls -l /etc/sudoers.d/kalender-reboot` prüfen und notfalls `bash ~/kalender/install.sh` erneut ausführen. |
 | Bildschirm wird nach einiger Zeit schwarz | `sudo raspi-config` → *Display Options* → *Screen Blanking* → *No*. |
 | `install.sh: line 1: $'\r': command not found` | Zeilenenden aus Windows. Den `sed`-Befehl aus Schritt 5 ausführen. |
+| `Permission denied` beim Aufruf eines Skripts | Das Ausführbar-Bit fehlt. Sofort hilft ein vorangestelltes `bash`, dauerhaft: `chmod +x ~/kalender/*.sh ~/kalender/kiosk/*.sh` |
 
 Nützliche Befehle im Alltag:
 
@@ -343,6 +379,9 @@ journalctl -u kalender -f
 ```bash
 sudo systemctl restart kalender
 ```
+
+Weitere Befehle für die Fernwartung stehen weiter unten im Abschnitt
+„Fernwartung per SSH".
 
 ---
 
@@ -368,6 +407,151 @@ Kalenderdienst läuft die ganze Zeit weiter, du verlierst also nichts.
 
 Nur Kalender-Einstellungen ändern? Dafür musst du das Vollbild nicht verlassen,
 dazu genügt das Zahnrad oben rechts.
+
+## Fernwartung per SSH
+
+So kommst du vom Windows-Rechner aus an den Pi, ohne Tastatur und Monitor
+anzustecken.
+
+### Einmalig vorbereiten
+
+SSH am Pi einschalten: `sudo raspi-config` → *Interface Options* → *SSH* →
+*Yes*. Dann die Adresse notieren:
+
+```bash
+hostname -I
+```
+
+Von Windows aus verbinden (PowerShell, Adresse und Benutzer anpassen):
+
+```powershell
+ssh pi@192.168.1.50
+```
+
+Damit du nicht jedes Mal das Passwort brauchst, einmalig einen Schlüssel
+hinterlegen — erst auf Windows erzeugen, dann übertragen:
+
+```powershell
+ssh-keygen -t ed25519
+```
+
+```powershell
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh pi@192.168.1.50 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+```
+
+Beendet wird eine SSH-Sitzung mit `exit`.
+
+### Dienst steuern
+
+| Zweck | Befehl |
+|---|---|
+| Läuft er? | `systemctl status kalender` |
+| Neu starten | `sudo systemctl restart kalender` |
+| Anhalten / starten | `sudo systemctl stop kalender` / `sudo systemctl start kalender` |
+| Autostart aus / ein | `sudo systemctl disable kalender` / `sudo systemctl enable kalender` |
+
+Protokoll mitlesen (mit `Strg`+`C` beenden):
+
+```bash
+journalctl -u kalender -f
+```
+
+Die letzten 50 Zeilen, etwa nach einer Störung:
+
+```bash
+journalctl -u kalender -n 50
+```
+
+Nur Warnungen und Fehler seit dem letzten Einschalten:
+
+```bash
+journalctl -u kalender -b -p warning
+```
+
+### Kalenderdaten prüfen
+
+Antwortet der Dienst überhaupt?
+
+```bash
+curl -s localhost:8080/healthz
+```
+
+Sofort neu aus dem Internet laden, ohne aufs Intervall zu warten:
+
+```bash
+curl -s -X POST localhost:8080/api/refresh
+```
+
+Übersicht, wie viele Termine je Tag ankommen:
+
+```bash
+python3 -c "import json,urllib.request; d=json.load(urllib.request.urlopen('http://localhost:8080/api/week')); print('Stand:', d['status']['last_success']); [print(' ', x['date'], len(x['all_day'])+len(x['timed']), 'Termine') for x in d['days']]"
+```
+
+Zustand der einzelnen Kalender und der laufende Programmstand:
+
+```bash
+python3 -c "import json,urllib.request; d=json.load(urllib.request.urlopen('http://localhost:8080/api/week')); print('online:', d['status']['online'], '| Version:', d['version']); [print(' ', c['name'], 'ok' if c['ok'] else 'FEHLER') for c in d['status']['calendars']]"
+```
+
+Zähler der drei Taster — bei jedem Druck muss der passende steigen:
+
+```bash
+curl -s localhost:8080/api/button
+```
+
+### Konfiguration
+
+Bearbeiten (`Strg`+`O` speichern, `Strg`+`X` schließen):
+
+```bash
+nano ~/kalender/config.yaml
+```
+
+Vor dem Neustart prüfen, ob sie fehlerfrei ist. Bei einem Fehler nennt die
+letzte Zeile der Ausgabe die Ursache:
+
+```bash
+cd ~/kalender && .venv/bin/python -c "from app.config import load_config; c=load_config('config.yaml'); print('in Ordnung -', len(c.calendars), 'Kalender')"
+```
+
+Letzte funktionierende Fassung zurückholen (die Einstellungsseite legt sie an):
+
+```bash
+cp ~/kalender/config.yaml.bak ~/kalender/config.yaml && sudo systemctl restart kalender
+```
+
+### Anzeige steuern
+
+Vollbild beenden, um am Desktop zu arbeiten:
+
+```bash
+~/kalender/kiosk/stop-kiosk.sh
+```
+
+Das Zurückstarten über SSH gelingt nur, wenn die Sitzung des Desktops mit
+angegeben wird — und auch dann nicht immer:
+
+```bash
+WAYLAND_DISPLAY=wayland-0 XDG_RUNTIME_DIR=/run/user/1000 ~/kalender/kiosk/start-kiosk.sh &
+```
+
+Zuverlässig ist stattdessen ein Neustart, danach ist der Kalender wieder im
+Vollbild:
+
+```bash
+sudo reboot
+```
+
+### System
+
+| Zweck | Befehl |
+|---|---|
+| Neu starten / ausschalten | `sudo reboot` / `sudo shutdown -h now` |
+| Uhrzeit und Zeitzone prüfen | `timedatectl` |
+| Speicherplatz | `df -h /` |
+| Temperatur | `vcgencmd measure_temp` |
+| Betriebssystem aktualisieren | `sudo apt update && sudo apt full-upgrade -y` |
 
 ## Später etwas ändern
 

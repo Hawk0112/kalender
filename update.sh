@@ -18,9 +18,10 @@ if [ ! -d "$APPDIR/.venv" ]; then
   exit 1
 fi
 
-# Zeilenenden reparieren, falls die Dateien ueber Windows gekommen sind.
+# Zeilenenden reparieren und Skripte ausfuehrbar machen - beides geht verloren,
+# wenn die Dateien ueber Windows gekommen sind.
 sed -i 's/\r$//' "$APPDIR"/*.sh "$APPDIR/kiosk/"*.sh 2>/dev/null || true
-chmod +x "$APPDIR/kiosk/"*.sh 2>/dev/null || true
+chmod +x "$APPDIR"/*.sh "$APPDIR/kiosk/"*.sh 2>/dev/null || true
 
 info "Python-Bibliotheken abgleichen"
 "$APPDIR/.venv/bin/pip" install --quiet --upgrade pip

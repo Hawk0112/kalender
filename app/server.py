@@ -22,7 +22,9 @@ from .config import (
     save_config,
     settings_to_raw,
 )
+from .alarm_runner import AlarmRunner
 from .button import ButtonWatcher
+from .buzzer import Buzzer
 from .events import build_days, collect_alarms, expand, parse_calendar
 from .sources import SourceFetcher
 from .store import CalendarStore
@@ -54,10 +56,18 @@ def build_id() -> str:
 class AppContext:
     """Haelt die aktuell gueltige Konfiguration - sie kann sich zur Laufzeit aendern."""
 
-    def __init__(self, config: Config, store: CalendarStore, button: ButtonWatcher):
+    def __init__(
+        self,
+        config: Config,
+        store: CalendarStore,
+        button: ButtonWatcher,
+        buzzer: Buzzer | None = None,
+    ):
         self.config = config
         self.store = store
         self.button = button
+        self.buzzer = buzzer
+        self.alarms: AlarmRunner | None = None
 
     def reload(self, config: Config) -> None:
         self.config = config
@@ -169,6 +179,7 @@ def create_app(ctx: AppContext) -> Flask:
                 "view": view,
                 "alarm": config.alarm,
                 "alarms": alarms,
+                "buzzer": ctx.buzzer.state() if ctx.buzzer else None,
                 "button": ctx.button.state(),
                 "status": store.status(),
                 "days": days,
@@ -203,6 +214,30 @@ def create_app(ctx: AppContext) -> Flask:
         except ValueError as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
         return jsonify({"ok": True, "action": action, "presses": count})
+
+    # -- Alarm -----------------------------------------------------------
+    @app.post("/api/alarm/stop")
+    def api_alarm_stop():
+        """Laufenden Alarm beenden - auch den Summer, wenn er gerade laeutet."""
+        if ctx.alarms is not None:
+            ctx.alarms.silence()
+        return jsonify({"ok": True})
+
+    @app.post("/api/alarm/test")
+    def api_alarm_test():
+        """Tonprobe auf dem Summer, fuer den Knopf in den Einstellungen."""
+        sound = str(request.args.get("sound") or ctx.config.alarm["sound"])
+        if ctx.config.alarm["output"] != "buzzer":
+            return jsonify(
+                {"ok": False, "error": "Ausgabe steht auf Lautsprecher - "
+                                       "erst umstellen und speichern."}
+            )
+        if ctx.alarms is None or ctx.buzzer is None or not ctx.buzzer.available:
+            reason = ctx.buzzer.error if ctx.buzzer else "kein Summer eingerichtet"
+            return jsonify({"ok": False, "error": reason or "Summer nicht verfügbar"})
+        if not ctx.alarms.test(sound, seconds=3.0):
+            return jsonify({"ok": False, "error": "Summer antwortet nicht"})
+        return jsonify({"ok": True})
 
     # -- Einstellungsseite ----------------------------------------------
     @app.get("/api/settings")
@@ -307,8 +342,25 @@ def main(argv: list[str] | None = None) -> int:
         log.info("Taster nicht verfuegbar (%s) - der Alarm laesst sich weiterhin "
                  "mit jeder Taste beenden.", button.error)
 
+    buzzer = Buzzer(config.alarm)
+    buzzer.start()
+    if config.alarm["output"] == "buzzer" and not buzzer.available:
+        log.warning(
+            "Summer nicht verfuegbar (%s) - es klingelt nichts. In den "
+            "Einstellungen laesst sich auf Lautsprecher umstellen.",
+            buzzer.error,
+        )
+
+    ctx = AppContext(config, store, button, buzzer)
+    ctx.alarms = AlarmRunner(ctx, buzzer)
+    button.add_listener(ctx.alarms.on_button)
+    ctx.alarms.start()
+
     def shutdown(signum, frame):  # noqa: ARG001
         store.stop()
+        if ctx.alarms is not None:
+            ctx.alarms.shutdown()
+        buzzer.close()
         button.stop()
         sys.exit(0)
 
@@ -318,7 +370,7 @@ def main(argv: list[str] | None = None) -> int:
         except (ValueError, AttributeError):
             pass
 
-    app = create_app(AppContext(config, store, button))
+    app = create_app(ctx)
     host = args.host or config.server["host"]
     port = args.port or int(config.server["port"])
     log.info("Kalender laeuft auf http://%s:%s (Zeitzone %s)", host, port, config.tz)

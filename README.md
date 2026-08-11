@@ -16,6 +16,8 @@ beim Einschalten des Raspberry automatisch im Vollbild.
 | `app/static/settings.js` | Einstellungsdialog hinter dem Zahnrad |
 | `app/static/alarm.js` | Alarmton bei Erinnerungen, Töne werden im Browser erzeugt |
 | `app/button.py` | Taster am GPIO zum Abschalten des Alarmtons |
+| `app/buzzer.py` | Piezo-Summer am GPIO, erzeugt die Alarmtöne per PWM |
+| `app/alarm_runner.py` | löst den Summer aus, wenn eine Erinnerung fällig wird |
 | `kiosk/start-kiosk.sh` | startet Chromium im Kiosk-Modus, startet ihn bei Absturz neu |
 | `kiosk/stop-kiosk.sh` | beendet die Vollbildanzeige, um am Desktop zu arbeiten |
 | `systemd/` | Vorlage für den Dienst `kalender.service` |
@@ -151,18 +153,42 @@ Termins sowie feste Zeitpunkte.
 diese zum Terminbeginn melden, schaltet „Auch bei Terminbeginn" ein; ganztägige
 Termine sind davon ausgenommen, sonst klingelte es um Mitternacht.
 
-Einstellbar über das Zahnrad, Abschnitt **Alarm**:
+### Wo der Ton herauskommt
+
+Zur Wahl stehen zwei Wege, umschaltbar im Zahnrad unter *Alarm* → **Ausgabe**:
+
+| Ausgabe | Beschreibung |
+|---|---|
+| **Summer am GPIO** (Standard) | Piezo-Summer zwischen **Pin 12 (GPIO 18)** und **Pin 14 (GND)**. Den Ton erzeugt der Dienst selbst — er klingelt deshalb auch, wenn der Bildschirm aus ist oder der Browser hängt. |
+| **Lautsprecher (HDMI/USB)** | Der Ton kommt wie zuvor aus dem Browser, über die Tonausgabe des Pi. Braucht keine Verdrahtung, aber einen laufenden Browser. |
+
+Für den Summer nimmst du ein **passives** Piezo-Element („passive buzzer", ohne
+eigene Elektronik) — ein aktiver Summer kann nur einen einzigen festen Ton.
+Zwei Drähte genügen, ein Widerstand ist nicht nötig. Einen richtigen
+Lautsprecher darfst du **nicht** direkt an GPIO hängen: Er zöge ein Vielfaches
+dessen, was ein Pin verträgt.
+
+Den Pin änderst du bei Bedarf in `config.yaml` unter `alarm.buzzer_gpio`; `0`
+heißt „nicht angeschlossen". Danach `sudo systemctl restart kalender`.
+
+### Einstellungen
+
+Im Zahnrad, Abschnitt **Alarm**:
 
 | Einstellung | Bedeutung |
 |---|---|
 | Aktiv | Alarm ganz an- oder abschalten |
+| Ausgabe | Summer am GPIO oder Lautsprecher |
 | Ton | Doppelpiep, Wecker, Glockenspiel, Gong oder Sanfter Ton |
 | Lautstärke | 0 bis 100 % |
 | Ende des Tons | „nach fester Dauer" oder „bei Tasteneingabe" |
 | Dauer | Sekunden bei festem Ende, voreingestellt 10 |
 | Auch bei Terminbeginn | aus – Termine ohne eigene Erinnerung bleiben still |
 
-Der Knopf **Ton anhören** spielt die aktuelle Auswahl drei Sekunden lang ab.
+Der Knopf **Ton anhören** spielt die aktuelle Auswahl drei Sekunden lang ab —
+je nach Einstellung über den Summer oder über den Lautsprecher. Beim Summer
+klingt der Ton schlichter: Ein Piezo kann nur Tonhöhen, keine Klangfarben, die
+fünf Melodien sind dort also Ton-Pausen-Muster.
 Im Modus „bei Tasteneingabe" beendet jede Taste (und auch ein Mausklick) den
 Ton; passiert nichts, hört er nach fünf Minuten von selbst auf, damit ein
 Termin um drei Uhr früh nicht endlos läutet. Weil die Anzeige den Kalender
@@ -172,15 +198,16 @@ im Modus mit fester Dauer verschwindet sie zusätzlich von selbst.
 Die Anzeige liegt außerhalb des abgedunkelten Bereichs: Die Nachtabsenkung
 dimmt sie nicht mit, ein Alarm um drei Uhr früh ist also voll sichtbar.
 
-Die Töne werden im Browser erzeugt (Web Audio), es gibt also keine
-Audiodateien, die fehlen oder im falschen Format vorliegen können. Damit
-Chromium ohne Benutzereingabe Ton ausgibt, startet
+Bei der Ausgabe **Lautsprecher** werden die Töne im Browser erzeugt (Web
+Audio), es gibt also keine Audiodateien, die fehlen oder im falschen Format
+vorliegen können. Damit Chromium ohne Benutzereingabe Ton ausgibt, startet
 [start-kiosk.sh](kiosk/start-kiosk.sh) ihn mit
-`--autoplay-policy=no-user-gesture-required`. Voraussetzung ist natürlich, dass
-am Pi eine Tonausgabe hängt. **Der Raspberry Pi 5 hat keinen Klinkenausgang
-mehr**, es bleiben also Lautsprecher im Display über HDMI, ein USB-Lautsprecher
-oder ein USB-Audioadapter. Ist der Ton stummgeschaltet, erscheint die
-Leiste trotzdem, mit dem Hinweis „Ton stummgeschaltet".
+`--autoplay-policy=no-user-gesture-required`. Voraussetzung ist eine
+angeschlossene Tonausgabe: **Der Raspberry Pi 5 hat keinen Klinkenausgang
+mehr**, es bleiben Lautsprecher im Display über HDMI, ein USB-Lautsprecher oder
+ein USB-Audioadapter. Ist der Ton stummgeschaltet, erscheint die Anzeige
+trotzdem, mit dem Hinweis „Ton stummgeschaltet" — beim Summer entsprechend
+„Summer nicht verfügbar".
 
 Nach einem Neustart des Browsers werden Erinnerungen, die währenddessen fällig
 gewesen wären, **nicht** nachgeholt.

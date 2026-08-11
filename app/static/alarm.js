@@ -143,6 +143,8 @@ function stopAlarm() {
   if (!ringing && !ringTimer) return;
   ringing = false;
   stopSound();
+  // Auch den Summer am GPIO abschalten, falls er gerade laeuft.
+  fetch("/api/alarm/stop", { method: "POST" }).catch(() => {});
   alarmEl.banner.hidden = true;
   // Merker, damit dieselbe Taste nicht gleich die Einstellungen oeffnet.
   window.__alarmStoppedAt = Date.now();
@@ -153,7 +155,11 @@ function alarmIsRinging() {
 }
 
 function fireAlarm(entry, settings) {
-  const started = startSound(settings.sound, settings.volume);
+  // Beim Summer erzeugt der Dienst den Ton am GPIO - der Browser bleibt still,
+  // zeigt den Termin aber genauso an.
+  const viaBuzzer = settings.output === "buzzer";
+  const buzzerReady = !alarmData.buzzer || alarmData.buzzer.available;
+  const started = viaBuzzer ? buzzerReady : startSound(settings.sound, settings.volume);
   ringing = true;
 
   alarmEl.title.textContent = (entry.icon ? `${entry.icon} ` : "") + entry.title;
@@ -170,7 +176,8 @@ function fireAlarm(entry, settings) {
 
   // Die Anzeige deckt den Kalender ab, deshalb steht in beiden Betriebsarten
   // dabei, wie man sie vorzeitig loswird.
-  alarmEl.hint.textContent = started ? stopWith : `Ton stummgeschaltet – ${stopWith}`;
+  const stumm = viaBuzzer ? "Summer nicht verfügbar" : "Ton stummgeschaltet";
+  alarmEl.hint.textContent = started ? stopWith : `${stumm} – ${stopWith}`;
 
   if (settings.stop_mode === "key") {
     // Sicherheitsnetz, falls niemand da ist.
@@ -192,6 +199,7 @@ function updateAlarms(data) {
     settings: data.alarm || null,
     list: data.alarms || [],
     button: data.button || null,
+    buzzer: data.buzzer || null,
   };
 
   // Beim ersten Datensatz alles Vergangene als erledigt merken, damit nach

@@ -52,6 +52,13 @@ view:
 # Alarmton bei Erinnerungen (VALARM) eines Termins.
 alarm:
   enabled: true
+  # Wo der Ton herauskommt:
+  #   buzzer  = Piezo-Summer am GPIO (Standard), klingelt auch bei dunklem
+  #             Bildschirm, weil der Dienst ihn ansteuert
+  #   speaker = Ton aus dem Browser ueber HDMI, USB-Lautsprecher o. ae.
+  output: buzzer
+  # Summer zwischen Pin 12 (GPIO18) und GND, z. B. Pin 14. 0 = nicht vorhanden.
+  buzzer_gpio: 18
   # beep | alarm | chime | gong | soft
   sound: beep
   volume: 0.8

@@ -64,7 +64,12 @@ class ButtonWatcher:
         self._errors: dict[str, str] = {}
         self._rebooting = False
         self._on_reboot = on_reboot or self._reboot
+        self._listeners: list[Callable[[str], None]] = []
         self.error: str | None = None
+
+    def add_listener(self, callback: Callable[[str], None]) -> None:
+        """Wird bei jedem Tastendruck mit der Aufgabe aufgerufen."""
+        self._listeners.append(callback)
 
     # -- Lebenszyklus ----------------------------------------------------
     def start(self) -> None:
@@ -132,6 +137,11 @@ class ButtonWatcher:
             self._last = datetime.now(timezone.utc)
             count = self._counts[action]
         self._changed.set()
+        for listener in self._listeners:
+            try:
+                listener(action)
+            except Exception:
+                log.exception("Fehler beim Melden des Tastendrucks")
         return count
 
     def counter(self) -> dict[str, Any]:

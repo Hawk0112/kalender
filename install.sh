@@ -15,8 +15,10 @@ if [ "$(id -u)" -eq 0 ] && [ -z "${SUDO_USER:-}" ]; then
   exit 1
 fi
 
-# Zeilenenden korrigieren, falls die Dateien von Windows kopiert wurden.
-sed -i 's/\r$//' "$APPDIR/kiosk/"*.sh 2>/dev/null || true
+# Zeilenenden korrigieren und Skripte ausfuehrbar machen. Beides geht verloren,
+# wenn die Dateien ueber Windows kommen - per USB, scp oder Git.
+sed -i 's/\r$//' "$APPDIR"/*.sh "$APPDIR/kiosk/"*.sh 2>/dev/null || true
+chmod +x "$APPDIR"/*.sh "$APPDIR/kiosk/"*.sh 2>/dev/null || true
 
 info "Systempakete"
 sudo apt-get update -qq

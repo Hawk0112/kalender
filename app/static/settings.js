@@ -224,6 +224,10 @@ function buildForm(data) {
   // Alarm
   const alarm = data.alarm;
   const alarmOn = h("input", { type: "checkbox", checked: alarm.enabled });
+  const output = h("select", {},
+    ...(data.outputs || []).map((entry) => h("option", {
+      value: entry.id, text: entry.name, selected: entry.id === alarm.output,
+    })));
   const sound = h("select", {},
     ...(data.sounds || []).map((entry) => h("option", {
       value: entry.id, text: entry.name, selected: entry.id === alarm.sound,
@@ -252,9 +256,26 @@ function buildForm(data) {
 
   const preview = h("button", {
     type: "button", class: "ghost", text: "Ton anhören",
-    onclick: () => {
-      const ok = previewSound(sound.value, Number(volume.value), 3);
-      if (!ok) setMessage("Der Browser hat die Tonausgabe blockiert.", "bad");
+    onclick: async (event) => {
+      setMessage("");
+      if (output.value !== "buzzer") {
+        const ok = previewSound(sound.value, Number(volume.value), 3);
+        if (!ok) setMessage("Der Browser hat die Tonausgabe blockiert.", "bad");
+        return;
+      }
+      // Beim Summer erzeugt der Dienst den Ton.
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        const response = await fetch(
+          `/api/alarm/test?sound=${encodeURIComponent(sound.value)}`, { method: "POST" });
+        const result = await response.json();
+        if (!result.ok) setMessage(`Summer: ${result.error}`, "bad");
+      } catch (err) {
+        setMessage(`Summer nicht erreichbar: ${err}`, "bad");
+      } finally {
+        button.disabled = false;
+      }
     },
   });
 
@@ -292,6 +313,7 @@ function buildForm(data) {
       `Klingelt zur Erinnerung eines Termins. Im Modus „bei Tasteneingabe“ hört der Ton spätestens nach ${Math.round((data.alarm_hard_limit_seconds || 300) / 60)} Minuten von selbst auf.`,
       h("div", { class: "row-grid" },
         field("Aktiv", alarmOn),
+        field("Ausgabe", output, "Summer klingelt auch bei dunklem Bildschirm"),
         field("Ton", sound),
         field("Lautstärke", h("div", { class: "colors" }, volume, volumeLabel)),
         field("Ende des Tons", stopMode),
@@ -328,6 +350,7 @@ function buildForm(data) {
     locale: locale.value.trim(),
     alarm: {
       enabled: alarmOn.checked,
+      output: output.value,
       sound: sound.value,
       volume: Number(volume.value),
       stop_mode: stopMode.value,

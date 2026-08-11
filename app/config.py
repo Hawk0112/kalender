@@ -40,6 +40,10 @@ DEFAULTS: dict[str, Any] = {
     },
     "alarm": {
         "enabled": True,
+        # buzzer  = Piezo-Summer am GPIO, klingelt auch bei dunklem Bildschirm
+        # speaker = Ton aus dem Browser ueber HDMI, USB o. ae.
+        "output": "buzzer",
+        "buzzer_gpio": 18,
         "sound": "beep",
         "volume": 0.8,
         # auto = nach 'duration_seconds' Schluss, key = bis zur Tasteneingabe
@@ -87,6 +91,13 @@ SOUNDS = [
     {"id": "soft", "name": "Sanfter Ton"},
 ]
 SOUND_IDS = {sound["id"] for sound in SOUNDS}
+
+# Wo der Alarmton herauskommt.
+OUTPUTS = [
+    {"id": "buzzer", "name": "Summer am GPIO"},
+    {"id": "speaker", "name": "Lautsprecher (HDMI/USB)"},
+]
+OUTPUT_IDS = {output["id"] for output in OUTPUTS}
 
 # Sicherheitsnetz fuer den Modus "bis zur Tasteneingabe": Wenn niemand da ist,
 # soll der Ton nicht endlos laufen.
@@ -198,6 +209,20 @@ def load_config(path: str | Path) -> Config:
         )
     if alarm["stop_mode"] not in ("auto", "key"):
         raise ConfigError("alarm.stop_mode muss 'auto' oder 'key' sein.")
+    if alarm["output"] not in OUTPUT_IDS:
+        raise ConfigError(
+            f"alarm.output muss einer von {', '.join(sorted(OUTPUTS))} sein."
+        )
+    try:
+        buzzer_pin = int(alarm["buzzer_gpio"])
+    except (TypeError, ValueError):
+        raise ConfigError("alarm.buzzer_gpio muss eine Zahl sein.") from None
+    if buzzer_pin and not 2 <= buzzer_pin <= 27:
+        raise ConfigError(
+            "alarm.buzzer_gpio muss 0 (nicht angeschlossen) oder eine "
+            "BCM-Nummer zwischen 2 und 27 sein."
+        )
+    alarm["buzzer_gpio"] = buzzer_pin
     alarm["duration_seconds"] = max(1, min(120, int(alarm["duration_seconds"])))
     alarm["volume"] = max(0.0, min(1.0, float(alarm["volume"])))
     alarm["hard_limit_seconds"] = ALARM_HARD_LIMIT_SECONDS
@@ -223,6 +248,10 @@ def load_config(path: str | Path) -> Config:
     belegt = [pin for pin in pins.values() if pin]
     if len(belegt) != len(set(belegt)):
         raise ConfigError("Jeder Taster braucht einen eigenen Pin.")
+    if alarm["buzzer_gpio"] and alarm["buzzer_gpio"] in belegt:
+        raise ConfigError(
+            f"GPIO{alarm['buzzer_gpio']} ist doppelt vergeben: Summer und Taster."
+        )
     if hold and not 3 <= hold <= 120:
         raise ConfigError(
             "button.reboot_hold_seconds muss 0 (aus) oder zwischen 3 und 120 sein."
@@ -348,6 +377,7 @@ def editable_settings(config: Config) -> dict[str, Any]:
         },
         "alarm": {
             "enabled": bool(config.alarm["enabled"]),
+            "output": config.alarm["output"],
             "sound": config.alarm["sound"],
             "volume": float(config.alarm["volume"]),
             "stop_mode": config.alarm["stop_mode"],
@@ -355,6 +385,7 @@ def editable_settings(config: Config) -> dict[str, Any]:
             "at_event_start": bool(config.alarm["at_event_start"]),
         },
         "sounds": SOUNDS,
+        "outputs": OUTPUTS,
         "alarm_hard_limit_seconds": ALARM_HARD_LIMIT_SECONDS,
         "calendars": [
             {
@@ -443,8 +474,15 @@ def settings_to_raw(payload: Any, previous: Config) -> dict[str, Any]:
     if not 0.0 <= volume <= 1.0:
         raise ConfigError("Lautstärke muss zwischen 0 und 1 liegen.")
 
+    output = str(alarm_in.get("output") or "buzzer")
+    if output not in OUTPUT_IDS:
+        raise ConfigError("Unbekannte Tonausgabe.")
+
     alarm = {
         "enabled": bool(alarm_in.get("enabled", True)),
+        "output": output,
+        # Der Pin ist Verdrahtung - unveraendert aus der Datei uebernehmen.
+        "buzzer_gpio": int(previous.alarm["buzzer_gpio"]),
         "sound": sound,
         "volume": round(volume, 2),
         "stop_mode": stop_mode,
