@@ -1,0 +1,13 @@
+# Python-Umgebung und Zwischenspeicher - werden auf jedem Geraet neu erzeugt
+.venv/
+cache/
+__pycache__/
+*.pyc
+
+# Persoenliche Konfiguration: enthaelt die geheimen Kalender-Adressen
+config.yaml
+config.yaml.bak
+config.yaml.tmp
+
+# Lokale Werkzeug-Einstellungen mit rechnerspezifischen Pfaden
+.claude/settings.local.json

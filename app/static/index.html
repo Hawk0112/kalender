@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalender</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="screen">
+    <header id="topbar">
+      <div class="topbar-left">
+        <div class="title-row">
+          <h1 id="rangeLabel">Kalender</h1>
+          <span id="offsetBadge" class="offset-badge" hidden></span>
+        </div>
+        <div id="weekLabel" class="subtle"></div>
+      </div>
+      <div class="topbar-right">
+        <div id="clock" class="clock"></div>
+        <div id="status" class="status"><span class="dot"></span><span id="statusText">verbinde…</span></div>
+        <button id="gear" class="gear" type="button" title="Einstellungen (Taste E)" aria-label="Einstellungen">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+            <path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3.4h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L4.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.8 1.7 1l.3 2.6h4l.3-2.6c.6-.2 1.2-.6 1.7-1l2.4 1 2-3.4-2-1.6z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="board" class="board" data-layout="timegrid">
+      <!-- wird von app.js gefuellt -->
+    </main>
+
+    <div id="splash" class="splash">Kalender wird geladen…</div>
+  </div>
+
+  <!-- Ausserhalb von #screen, damit die Nachtabsenkung den Alarm nicht mit
+       abdunkelt - er soll auch um drei Uhr frueh voll sichtbar sein. -->
+  <div id="alarmBanner" class="alarm-overlay" hidden>
+    <div class="alarm-card">
+      <div class="alarm-bell" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 22a2.2 2.2 0 0 0 2.2-2.2H9.8A2.2 2.2 0 0 0 12 22zm7-5.2v-5.4c0-3.3-1.8-6-4.8-6.7v-.7a2.2 2.2 0 0 0-4.4 0v.7C6.8 5.4 5 8.1 5 11.4v5.4l-2 2v1h18v-1l-2-2z"/></svg>
+      </div>
+      <div class="alarm-text">
+        <div id="alarmTitle" class="alarm-title"></div>
+        <div id="alarmDetail" class="alarm-detail"></div>
+      </div>
+      <div id="alarmHint" class="alarm-hint"></div>
+    </div>
+  </div>
+
+  <div id="settings" class="overlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="dialog-head">
+        <h2 id="settingsTitle">Einstellungen</h2>
+        <button id="settingsClose" class="ghost" type="button" title="Schließen (Esc)">✕</button>
+      </div>
+      <div id="settingsBody" class="dialog-body"></div>
+      <div class="dialog-foot">
+        <div id="settingsMessage" class="message"></div>
+        <button id="settingsCancel" class="ghost" type="button">Abbrechen</button>
+        <button id="settingsSave" class="primary" type="button">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/alarm.js"></script>
+  <script src="/static/buttons.js"></script>
+  <script src="/static/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+# Kalender - Konfiguration
+# Kopiere diese Datei nach config.yaml und passe sie an.
+# Nach Aenderungen von Hand: sudo systemctl restart kalender
+#
+# Das meiste laesst sich auch ueber das Zahnrad in der Anzeige einstellen.
+# Beim Speichern dort wird diese Datei neu geschrieben - eigene Kommentare
+# gehen dabei verloren, die vorherige Fassung bleibt als config.yaml.bak.
+
+# Zeitzone der Anzeige (IANA-Name)
+timezone: Europe/Vienna
+# Sprache fuer Wochentage/Monatsnamen (Browser-Locale)
+locale: de-AT
+
+server:
+  host: 127.0.0.1
+  port: 8080
+
+refresh:
+  # Wie oft die Kalender aus dem Internet geholt werden
+  interval_minutes: 15
+  # Wartezeit bis zum naechsten Versuch, wenn der Abruf fehlschlaegt
+  retry_minutes: 2
+  # Timeout pro HTTP-Abruf in Sekunden
+  timeout_seconds: 20
+  # Ab wann die Anzeige als "veraltet" markiert wird
+  stale_after_minutes: 90
+
+view:
+  # Anzahl angezeigter Tage (heute + folgende)
+  days: 7
+  # Dargestelltes Zeitfenster des Stundenrasters.
+  # Termine ausserhalb verschwinden nicht: sie werden in Sammelzeilen
+  # oberhalb ("vor 06:00") bzw. unterhalb ("nach 22:00") angezeigt.
+  day_start_hour: 6
+  day_end_hour: 22
+  # timegrid = Stundenraster, agenda = reine Terminliste pro Tag
+  layout: timegrid
+  show_clock: true
+  show_weeknumber: true
+  # Zeigt Uhrzeit-Rasterlinien alle N Stunden
+  hour_step: 1
+  # Wurde mit den Tastern geblaettert: nach so vielen Minuten ohne weiteren
+  # Druck von selbst zurueck auf die aktuelle Woche. 0 laesst sie stehen.
+  return_to_today_minutes: 5
+  # Nacht-Abdunklung des Displays (schont Augen und Panel)
+  dim:
+    enabled: true
+    start_hour: 22
+    end_hour: 6
+    brightness: 0.55
+
+# Alarmton bei Erinnerungen (VALARM) eines Termins.
+alarm:
+  enabled: true
+  # beep | alarm | chime | gong | soft
+  sound: beep
+  volume: 0.8
+  # auto = nach 'duration_seconds' Schluss, key = bis zu einer Tasteneingabe
+  stop_mode: auto
+  duration_seconds: 10
+  # Termine ohne eigene Erinnerung bleiben still.
+  # true = sie melden sich zusaetzlich zum Terminbeginn.
+  at_event_start: false
+
+# Drei Taster am GPIO, jeweils gegen GND (z. B. Pin 9).
+# Die Zahlen sind BCM-Nummern, nicht die der Stiftleiste:
+#   17 = Pin 11, 27 = Pin 13, 22 = Pin 15.   0 = nicht angeschlossen.
+button:
+  enabled: true
+  gpio: 17            # kurz: Alarm aus bzw. zurueck auf heute; lang: Neustart
+  gpio_forward: 27    # eine Woche vorwaerts
+  gpio_back: 22       # eine Woche zurueck
+  pull_up: true       # Taster gegen GND, interner Pull-up - kein Widerstand noetig
+  bounce_time: 0.05   # Entprellzeit in Sekunden
+  # So lange halten, um den Pi neu zu starten. 0 schaltet das ab.
+  reboot_hold_seconds: 20
+
+# Auffaellige Termine: ueberschreiben Farbe und stellen ein Symbol voran.
+# Getroffen wird ueber Stichwoerter im Titel (Gross-/Kleinschreibung egal)
+# oder ueber den Namen eines ganzen Kalenders.
+highlights:
+  - name: Geburtstage
+    match: ["geburtstag", "birthday", "bday", "🎂"]
+    # calendars: ["Geburtstage"]   # alternativ: kompletter Kalender
+    color: "#ff4fa3"
+    icon: "🎂"
+
+  # - name: Urlaub
+  #   match: ["urlaub", "ferien"]
+  #   color: "#39c07c"
+  #   icon: "🏖"
+
+# Kalenderquellen: oeffentliche bzw. geheime ICS-/iCal-URLs.
+# Google Kalender: Einstellungen -> Kalender -> "Geheime Adresse im iCal-Format"
+# Nextcloud/Outlook/Apple: "Kalender veroeffentlichen" -> ICS-Link
+calendars:
+  - name: Demo
+    url: demo/demo.ics        # lokale Datei zum Ausprobieren
+    color: "#4f9cf9"
+
+  # - name: Familie
+  #   url: https://calendar.google.com/calendar/ical/xxxxx/basic.ics
+  #   color: "#f2b53c"
+  #
+  # - name: Muellabfuhr
+  #   url: webcal://beispiel.at/abfuhr.ics
+  #   color: "#5ec269"
+  #   # Termine, deren Titel diesen Text enthaelt, werden ausgeblendet:
+  #   # exclude: ["Absage", "privat"]
