@@ -269,6 +269,29 @@ sudo systemctl restart kalender
 
 **Vorher den Pi ausschalten und vom Strom trennen.**
 
+### Wo Pin 1 liegt
+
+Die 40-polige Stiftleiste hat keine aufgedruckten Nummern — du musst also
+wissen, an welchem Ende gezählt wird. Drei Wege, das sicher festzustellen:
+
+**Am zuverlässigsten:** Dreh den Pi um. Auf der Unterseite haben alle
+Lötaugen der Stiftleiste eine runde Form — **nur Pin 1 ist eckig**. Das ist die
+übliche Kennzeichnung auf Platinen und lässt keinen Zweifel.
+
+**Auf der Oberseite:** Neben der Ecke der Stiftleiste steht die Aufschrift
+**`J8`**. Sie markiert den Anfang, also die Seite mit Pin 1.
+
+**Nach der Lage der Anschlüsse:** Pin 1 sitzt an dem Ende der Leiste, das
+**dem USB-C-Stromanschluss am nächsten** liegt — also am weitesten weg von den
+USB- und Netzwerkbuchsen.
+
+### Das Bild richtig auflegen
+
+Dreh den Pi so, dass die **Stiftleiste rechts** liegt und die **HDMI- und
+Stromanschlüsse links**. Dann passt die folgende Zeichnung eins zu eins auf die
+Platine: Pin 1 liegt oben, die ungeraden Nummern bilden die linke Spalte, die
+geraden die rechte.
+
 Drei Taster an einer gemeinsamen Masse (**Pin 9**) und der Summer an seiner
 eigenen (**Pin 14**):
 
@@ -289,6 +312,23 @@ gemeinsame Masse. Ein Widerstand ist nicht nötig, die Polung ist egal.
 Der Summer kommt zwischen Pin 12 und Pin 14 – die beiden liegen direkt
 nebeneinander. Piezo-Summer sind meist gepolt, achte auf die Markierung: Der
 markierte Anschluss gehört an Pin 12.
+
+### Vor dem Einschalten gegenprüfen
+
+Zähl noch einmal nach. Die einzigen Stifte, an denen wirklich etwas kaputtgehen
+kann, sind **Pin 2 und Pin 4 mit 5 Volt** – die liegen ganz an der Ecke bei
+Pin 1, also weit von allem, was wir hier verwenden. Trotzdem gilt: lieber
+zweimal zählen als einmal löten.
+
+Nach dem Einschalten lässt sich die Verdrahtung gefahrlos überprüfen:
+
+```bash
+curl -s localhost:8080/api/button
+```
+
+Drück nun nacheinander die Taster. Bei Taster 1 muss `today` hochzählen, bei
+Taster 2 `forward`, bei Taster 3 `back`. Zählt der falsche Wert, hast du die
+Reihen vertauscht; zählt gar nichts, das Ende der Leiste.
 
 | Taster | Wirkung |
 |---|---|

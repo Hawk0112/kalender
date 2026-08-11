@@ -228,8 +228,13 @@ praktisch, weil am Gerät sonst weder Maus noch Tastatur hängt.
 ### Verdrahtung
 
 Alle drei Taster teilen sich **Pin 9 (GND)** als gemeinsame Masse und gehen
-jeweils auf ihren eigenen Signalstift. Die vier Stifte liegen auf der
-40-poligen Leiste direkt untereinander in derselben Reihe:
+jeweils auf ihren eigenen Signalstift.
+
+Pin 1 erkennst du am **eckigen Lötauge** auf der Unterseite der Platine — alle
+anderen sind rund — sowie an der Aufschrift **`J8`** daneben. Er liegt an dem
+Ende der Leiste, das dem USB-C-Stromanschluss am nächsten ist. Dreh den Pi so,
+dass die Stiftleiste rechts und die HDMI-Anschlüsse links liegen, dann passt
+die folgende Zeichnung eins zu eins:
 
 ```
         3V3  (1) (2)  5V
