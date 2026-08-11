@@ -97,8 +97,25 @@ def create_app(ctx: AppContext) -> Flask:
 
     @app.post("/api/refresh")
     def api_refresh():
-        store.refresh_now()
-        return jsonify({"ok": True})
+        """Kalender sofort neu holen.
+
+        Wartet auf das Ergebnis, damit der Knopf in den Einstellungen melden
+        kann, ob es geklappt hat. Mit ?wait=0 kehrt der Aufruf sofort zurueck.
+        """
+        if request.args.get("wait") == "0":
+            store.refresh_now()
+            return jsonify({"ok": True, "waited": False})
+
+        all_ok = store.refresh()
+        status = store.status()
+        return jsonify(
+            {
+                "ok": all_ok,
+                "waited": True,
+                "status": status,
+                "problems": status["problems"],
+            }
+        )
 
     @app.get("/api/week")
     def api_week():

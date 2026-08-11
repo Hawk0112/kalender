@@ -213,6 +213,40 @@ function buildForm(data) {
     },
   });
 
+  // Sofort neu abrufen, ohne aufs Intervall zu warten.
+  const refreshResult = h("span", { class: "test-result" });
+  const refreshNow = h("button", {
+    type: "button", class: "ghost", text: "Jetzt aktualisieren",
+    onclick: async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      refreshResult.className = "test-result";
+      refreshResult.textContent = "wird geholt…";
+      try {
+        const response = await fetch("/api/refresh", { method: "POST" });
+        const data = await response.json();
+        const time = new Intl.DateTimeFormat("de-AT", {
+          hour: "2-digit", minute: "2-digit", hour12: false,
+        }).format(new Date());
+        if (data.ok) {
+          refreshResult.classList.add("good");
+          refreshResult.textContent = `aktualisiert ${time}`;
+        } else {
+          refreshResult.classList.add("bad");
+          const problems = (data.problems || [])
+            .map((p) => `${p.calendar}: ${p.message}`).join(" · ");
+          refreshResult.textContent = problems || "Abruf fehlgeschlagen";
+        }
+        await poll();     // Anzeige im Hintergrund gleich mitziehen
+      } catch (err) {
+        refreshResult.classList.add("bad");
+        refreshResult.textContent = `Fehler: ${err}`;
+      } finally {
+        button.disabled = false;
+      }
+    },
+  });
+
   // Hervorhebungen
   const highlightList = h("div", { class: "list" },
     ...data.highlights.map((rule) => highlightRow(rule, palette)));
@@ -306,7 +340,10 @@ function buildForm(data) {
 
   settingsEl.body.append(
     section("Kalender", "Die ICS-Adresse steht beim Anbieter unter „Kalender veröffentlichen“ oder „Geheime Adresse im iCal-Format“.",
-      calendarList, addCalendar),
+      calendarList, addCalendar,
+      h("div", { class: "row-actions" },
+        refreshNow, refreshResult,
+        h("span", { class: "fhint", text: "holt die gespeicherten Kalender sofort neu" }))),
     section("Hervorhebungen", "Termine, die auffallen sollen – unabhängig vom Kalender.",
       highlightList, addHighlight),
     section("Alarm",

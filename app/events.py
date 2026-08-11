@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import date, datetime, time, timedelta, tzinfo
 from typing import Any, Iterable
 
@@ -76,6 +77,17 @@ def alarm_times(component: Any, start: datetime, end: datetime, tz: tzinfo) -> l
     return moments
 
 
+# Farbe eines einzelnen Termins (COLOR, RFC 7986). Erlaubt sind ein Hex-Wert
+# oder ein CSS-Farbname wie "tomato". Alles andere wird verworfen - die Daten
+# stammen von fremden Servern und landen direkt im Stylesheet.
+COLOR_VALUE = re.compile(r"^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|[a-zA-Z]{3,24})$")
+
+
+def event_color(component: Any) -> str:
+    value = str(component.get("COLOR") or "").strip()
+    return value.lower() if COLOR_VALUE.match(value) else ""
+
+
 def match_highlight(title: str, source: dict, highlights: list[dict]) -> dict | None:
     """Erste passende Hervorhebungsregel finden (Titel-Stichwort oder Kalendername)."""
     haystack = title.lower()
@@ -119,6 +131,13 @@ def expand(
             continue
 
         rule = match_highlight(title, source, highlights or [])
+        # Reihenfolge: eigene Hervorhebungsregel, dann die Farbe des Termins
+        # aus dem Kalender, zuletzt die eingestellte Farbe der Quelle.
+        if rule and rule["color"]:
+            colour = rule["color"]
+        else:
+            colour = event_color(component) or source["color"]
+
         uid = _text(component, "UID") or title
         events.append(
             {
@@ -126,7 +145,7 @@ def expand(
                 "title": title,
                 "location": _text(component, "LOCATION"),
                 "calendar": source["name"],
-                "color": (rule["color"] if rule and rule["color"] else source["color"]),
+                "color": colour,
                 "icon": rule["icon"] if rule else "",
                 "highlight": rule["name"] if rule else None,
                 "all_day": all_day,

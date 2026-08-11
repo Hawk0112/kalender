@@ -476,11 +476,15 @@ Antwortet der Dienst überhaupt?
 curl -s localhost:8080/healthz
 ```
 
-Sofort neu aus dem Internet laden, ohne aufs Intervall zu warten:
+Sofort neu aus dem Internet laden, ohne aufs Intervall zu warten. Der Aufruf
+wartet, bis alle Kalender geholt sind, und meldet Probleme einzeln zurück:
 
 ```bash
 curl -s -X POST localhost:8080/api/refresh
 ```
+
+Dasselbe geht am Bildschirm: Zahnrad → Abschnitt *Kalender* → **Jetzt
+aktualisieren**.
 
 Übersicht, wie viele Termine je Tag ankommen:
 

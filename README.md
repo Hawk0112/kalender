@@ -76,7 +76,9 @@ Dort lässt sich alles ändern, was im laufenden Betrieb gebraucht wird:
   oder freie Farbwahl) und einzelne Termine über Stichwörter ausblenden. Der
   Knopf **Testen** ruft die Adresse sofort ab und meldet zurück, wie der
   Kalender heißt und wie viele Termine er in den nächsten 30 Tagen enthält –
-  so merkst du Tippfehler vor dem Speichern.
+  so merkst du Tippfehler vor dem Speichern. **Jetzt aktualisieren** holt alle
+  gespeicherten Kalender sofort neu, ohne aufs Intervall zu warten, und meldet,
+  ob es geklappt hat.
 * **Hervorhebungen** – Regeln wie „Geburtstage", siehe unten.
 * **Anzeige** – Anzahl Tage, Stundenraster oder Terminliste, Zeitfenster,
   Uhr und Kalenderwoche.
@@ -328,6 +330,33 @@ protokolliert. Kommt dort eine Meldung über fehlende Rechte, gehört der
 Benutzer in die Gruppe `gpio` (`sudo usermod -aG gpio $USER`, danach neu
 starten).
 
+## Farbe eines einzelnen Termins
+
+Normalerweise bekommt jeder Termin die Farbe seines Kalenders aus den
+Einstellungen. Liefert die Quelle für einen Termin eine **eigene** Farbe mit,
+wird diese verwendet. Maßgeblich ist die Eigenschaft `COLOR` aus RFC 7986; sie
+darf einen Hex-Wert (`#3366ff`) oder einen CSS-Farbnamen (`tomato`) enthalten.
+Alles andere wird verworfen — die Daten kommen von fremden Servern und landen
+direkt in der Darstellung.
+
+Die Rangfolge, wenn mehreres zutrifft:
+
+1. eine **Hervorhebungsregel** (z. B. Geburtstage) — sie hat immer Vorrang,
+   sonst wäre sie ja wirkungslos
+2. die **Farbe des Termins** aus dem Kalender
+3. die **eingestellte Farbe des Kalenders**
+
+**Wichtig zu Google Kalender:** Dort lässt sich pro Termin eine Farbe wählen,
+aber Google überträgt sie **nicht** im ICS-Export — der hält sich an RFC 5545,
+das keine Farbe kennt, und die Erweiterung RFC 7986 setzt Google in seinen
+Exporten nicht um. Für Google-Kalender bleibt es deshalb bei der eingestellten
+Farbe; die App bekommt schlicht keine andere geliefert. Wer trotzdem einzelne
+Termine hervorheben will, nutzt dafür die Hervorhebungsregeln weiter unten:
+Sie greifen über Stichwörter im Titel und sind vom Anbieter unabhängig.
+
+Anbieter, die `COLOR` mitliefern (etwa Nextcloud), funktionieren dagegen ohne
+weiteres Zutun.
+
 ## Geburtstage und andere auffällige Termine
 
 Geburtstage werden pink dargestellt und mit 🎂 gekennzeichnet, unabhängig davon,
@@ -366,7 +395,7 @@ erste passende Regel gewinnt.
 systemctl status kalender          # läuft der Dienst?
 journalctl -u kalender -f          # Protokoll mitlesen
 curl -s localhost:8080/api/week    # Rohdaten prüfen
-curl -X POST localhost:8080/api/refresh   # sofort neu laden
+curl -X POST localhost:8080/api/refresh   # sofort neu laden, wartet aufs Ergebnis
 ```
 
 Verhalten bei Störungen:

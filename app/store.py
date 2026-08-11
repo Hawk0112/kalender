@@ -45,6 +45,7 @@ class CalendarStore:
         self.config = config
         self.fetcher = SourceFetcher(cache_dir, timeout=int(config.refresh["timeout_seconds"]))
         self._lock = threading.Lock()
+        self._refresh_lock = threading.Lock()
         self._stop = threading.Event()
         self._wake = threading.Event()
         self._thread: threading.Thread | None = None
@@ -107,6 +108,12 @@ class CalendarStore:
 
     # -- Abruf -----------------------------------------------------------
     def refresh(self) -> bool:
+        # Nur ein Abruf gleichzeitig: sonst holen der Hintergrunddienst und ein
+        # Knopfdruck aus den Einstellungen dieselben Kalender doppelt.
+        with self._refresh_lock:
+            return self._refresh()
+
+    def _refresh(self) -> bool:
         all_ok = True
         now = datetime.now(timezone.utc)
         for source in self.config.calendars:
