@@ -557,6 +557,64 @@ sudo reboot
 | Temperatur | `vcgencmd measure_temp` |
 | Betriebssystem aktualisieren | `sudo apt update && sudo apt full-upgrade -y` |
 
+## Befehle am Windows-Rechner eingeben
+
+Manche Befehle in dieser Anleitung laufen nicht am Pi, sondern am
+Windows-Rechner — etwa alles rund um Git und das Kopieren per `scp`. Sie
+gehören immer in den Projektordner `C:\Projekte\Kalender`.
+
+### Der schnellste Weg
+
+Öffne `C:\Projekte\Kalender` im Explorer, klicke mit der **rechten Maustaste
+auf eine freie Stelle** im Ordner und wähle **„Im Terminal öffnen"**. Damit
+stehst du sofort im richtigen Verzeichnis.
+
+Alternativ über das Startmenü: `PowerShell` eintippen, starten, dann einmalig
+
+```powershell
+cd C:\Projekte\Kalender
+```
+
+Das gilt für das gesamte Fenster und muss nicht vor jedem Befehl wiederholt
+werden.
+
+### Prüfen, ob du richtig stehst
+
+```powershell
+git status
+```
+
+Erscheint eine Ausgabe über Dateien, passt es. Kommt *„not a git repository"*,
+bist du im falschen Verzeichnis.
+
+### Selbst hochladen
+
+Wenn du Änderungen nach GitHub bringen willst, diese drei nacheinander:
+
+```powershell
+git add -A
+```
+
+```powershell
+git commit -m "kurze Beschreibung"
+```
+
+```powershell
+git push
+```
+
+**Verwende in der Beschreibung keine Anführungszeichen** — PowerShell zerlegt
+die Zeile sonst an der falschen Stelle und der Commit schlägt fehl.
+
+### Zwei Hinweise
+
+Einfügen klappt mit `Strg`+`V` oder per Rechtsklick.
+
+Und: Enthält ein Befehl einen **Platzhalter** wie `DEIN-NAME` oder eine
+Beispiel-IP, musst du ihn vor dem Ausführen ersetzen. Wird er unverändert
+übernommen, landet der Platzhalter wörtlich in der Konfiguration — beim
+Eintragen der GitHub-Adresse ist das die häufigste Stolperstelle.
+
 ## Später etwas ändern
 
 * **Kalender, Farben, Alarm, Zeitfenster:** Zahnrad oben rechts (oder Taste `E`),
