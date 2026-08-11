@@ -131,7 +131,11 @@ html, body {
 .dayhead.weekend { background: #171d28; }
 .board.compact .dmon { display: none; }
 .board.compact .dayhead .dname { font-size: 0.85rem; }
-.dayhead.today { background: color-mix(in srgb, var(--today) 18%, var(--panel-2)); }
+/* Heute wird aufgehellt, die uebrigen Tage bleiben unveraendert. */
+.dayhead.today {
+  background: color-mix(in srgb, var(--today) 26%, var(--panel-2));
+  box-shadow: inset 0 0.2rem 0 var(--today);
+}
 .dayhead .dnum {
   font-size: 1.55rem;
   font-weight: 600;
@@ -181,7 +185,7 @@ html, body {
   overflow: hidden;
 }
 .allday.weekend { background: #171d28; }
-.allday.today { background: color-mix(in srgb, var(--today) 10%, var(--panel-2)); }
+.allday.today { background: color-mix(in srgb, var(--today) 16%, var(--panel-2)); }
 
 .chip {
   font-size: 0.82rem;
@@ -194,7 +198,9 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.chip.past { opacity: 0.4; }
+/* Vergangenes nur leicht zuruecknehmen. Frueher waren es 0.4 - dadurch wirkte
+   der heutige Tag nachmittags matter als die kommenden Tage. */
+.chip.past { opacity: 0.8; }
 .chip.highlight {
   background: color-mix(in srgb, var(--c) 68%, #0f141c);
   border-left-width: 0.3rem;
@@ -230,7 +236,7 @@ html, body {
 .edge.early { border-bottom: 1px solid var(--line-strong); }
 .edge.late { border-top: 1px solid var(--line-strong); }
 .edge.weekend { background: #141924; }
-.edge.today { background: color-mix(in srgb, var(--today) 8%, #12161f); }
+.edge.today { background: color-mix(in srgb, var(--today) 15%, #12161f); }
 
 .chip-time {
   font-variant-numeric: tabular-nums;
@@ -254,7 +260,7 @@ html, body {
 /* Tagesspalte */
 .daybody { position: relative; overflow: hidden; }
 .daybody.weekend { background: #12161f; }
-.daybody.today { background: color-mix(in srgb, var(--today) 6%, transparent); }
+.daybody.today { background: color-mix(in srgb, var(--today) 13%, transparent); }
 .hline {
   position: absolute;
   left: 0; right: 0;
@@ -300,7 +306,7 @@ html, body {
 .event.short { flex-direction: row; align-items: baseline; gap: 0.3rem; padding: 0.02rem 0.3rem; }
 .event.short .etitle { -webkit-line-clamp: 1; font-size: 0.8rem; }
 .event.short .etime { font-size: 0.68rem; }
-.event.past { opacity: 0.42; }
+.event.past { opacity: 0.8; }
 /* Termin ragt ueber das Zeitfenster hinaus - Kante gestrichelt andeuten. */
 .event.cut-top { border-top: 2px dashed var(--c); border-top-left-radius: 0; border-top-right-radius: 0; }
 .event.cut-bottom { border-bottom: 2px dashed var(--c); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
@@ -343,13 +349,15 @@ html, body {
   gap: 0.3rem;
   overflow: hidden;
 }
+.agenda.weekend { background: #12161f; }
+.agenda.today { background: color-mix(in srgb, var(--today) 13%, transparent); }
 .agenda .item {
   border-left: 0.22rem solid var(--c);
   background: color-mix(in srgb, var(--c) 18%, transparent);
   border-radius: 0.28rem;
   padding: 0.25rem 0.4rem;
 }
-.agenda .item.past { opacity: 0.42; }
+.agenda .item.past { opacity: 0.8; }
 .agenda .item.highlight {
   background: color-mix(in srgb, var(--c) 60%, #0f141c);
   color: #fff;
