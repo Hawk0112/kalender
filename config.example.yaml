@@ -28,6 +28,8 @@ refresh:
 view:
   # Anzahl angezeigter Tage (heute + folgende)
   days: 7
+  # Farbschema: dark = helle Schrift auf dunklem Grund, light = umgekehrt
+  theme: dark
   # Dargestelltes Zeitfenster des Stundenrasters.
   # Termine ausserhalb verschwinden nicht: sie werden in Sammelzeilen
   # oberhalb ("vor 06:00") bzw. unterhalb ("nach 22:00") angezeigt.

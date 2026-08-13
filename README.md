@@ -111,6 +111,7 @@ Alles ist auch direkt in der Datei einstellbar – manches gibt es nur dort
 | `highlights` | auffällige Termine, siehe oben |
 | `alarm` | Alarmton bei Erinnerungen, siehe oben |
 | `button` | Taster am GPIO, siehe oben (nur in der Datei einstellbar) |
+| `view.theme` | `dark` (helle Schrift auf dunklem Grund, Vorgabe) oder `light` |
 | `view.layout` | `timegrid` (Stundenraster) oder `agenda` (Liste je Tag, gut für kleine Displays) |
 | `view.return_to_today_minutes` | nach Blättern von selbst zurück auf die aktuelle Woche, `0` = aus |
 | `view.dim` | Nachtabsenkung der Helligkeit |
@@ -119,6 +120,22 @@ Alles ist auch direkt in der Datei einstellbar – manches gibt es nur dort
 
 Nach Änderungen direkt in der Datei: `sudo systemctl restart kalender`.
 (Beim Speichern über das Zahnrad entfällt das.)
+
+## Farbschema
+
+Im Zahnrad unter *Anzeige* → **Farbschema** lässt sich zwischen **Dunkel**
+(Vorgabe) und **Hell** umschalten. Die Auswahl wirkt sofort zum Ausprobieren;
+brichst du den Dialog ab, springt die Anzeige auf das gespeicherte Schema
+zurück.
+
+Sämtliche Farben stehen als Variablen am Anfang von
+[style.css](app/static/style.css) — das helle Schema tauscht nur diese Werte
+aus. Eigene Farbwelten lassen sich dort also ohne Eingriff in den übrigen Code
+anlegen.
+
+Ein Unterschied ist bauartbedingt: Im dunklen Schema hebt sich der heutige Tag
+über die **Helligkeit** ab, im hellen über die **Farbe** — auf weißem Grund
+lässt sich nichts aufhellen.
 
 ## Die Wochenansicht
 

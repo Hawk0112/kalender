@@ -315,6 +315,14 @@ function buildForm(data) {
 
   // Anzeige
   const days = numberInput(data.view.days, 1, 14);
+  const theme = h("select", {},
+    ...(data.themes || []).map((entry) => h("option", {
+      value: entry.id, text: entry.name, selected: entry.id === data.view.theme,
+    })));
+  // Sofort umschalten, damit man die Wirkung vor dem Speichern sieht.
+  theme.addEventListener("change", () => {
+    document.documentElement.dataset.theme = theme.value;
+  });
   const layout = h("select", {},
     h("option", { value: "timegrid", text: "Stundenraster", selected: data.view.layout === "timegrid" }),
     h("option", { value: "agenda", text: "Terminliste", selected: data.view.layout === "agenda" }));
@@ -392,6 +400,7 @@ function buildForm(data) {
     section("Anzeige", null,
       h("div", { class: "row-grid" },
         field("Anzahl Tage", days, "heute plus die folgenden"),
+        field("Farbschema", theme, "wirkt sofort zum Ausprobieren"),
         field("Darstellung", layout),
         field("Zeitfenster von", fromHour),
         field("Zeitfenster bis", toHour),
@@ -435,6 +444,7 @@ function buildForm(data) {
     },
     view: {
       days: Number(days.value),
+      theme: theme.value,
       layout: layout.value,
       day_start_hour: Number(fromHour.value),
       day_end_hour: Number(toHour.value),
@@ -479,6 +489,8 @@ async function openSettings() {
 
 function closeSettings() {
   stopAlarm();   // eine laufende Tonprobe beenden
+  // Eine nicht gespeicherte Farbschema-Vorschau wieder zuruecknehmen.
+  document.documentElement.dataset.theme = current?.view?.theme || "dark";
   settingsEl.overlay.hidden = true;
   document.body.classList.remove("settings-open");
   form = null;
@@ -489,16 +501,20 @@ async function saveSettings() {
   settingsEl.save.disabled = true;
   setMessage("wird gespeichert…");
   try {
+    const payload = form();
     const response = await fetch("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form()),
+      body: JSON.stringify(payload),
     });
     const data = await response.json();
     if (!response.ok || !data.ok) {
       setMessage(data.error || `HTTP ${response.status}`, "bad");
       return;
     }
+    // Gespeichertes Schema gleich vermerken, sonst blinkt beim Schliessen
+    // kurz das vorherige auf.
+    if (current?.view) current.view.theme = payload.view.theme;
     closeSettings();
     lastRenderedSignature = "";   // Anzeige komplett neu aufbauen
     await poll();

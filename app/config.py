@@ -22,6 +22,8 @@ DEFAULTS: dict[str, Any] = {
     },
     "view": {
         "days": 7,
+        # dark = heller Text auf dunklem Grund, light = umgekehrt
+        "theme": "dark",
         "day_start_hour": 6,
         "day_end_hour": 22,
         "layout": "timegrid",
@@ -98,6 +100,13 @@ OUTPUTS = [
     {"id": "speaker", "name": "Lautsprecher (HDMI/USB)"},
 ]
 OUTPUT_IDS = {output["id"] for output in OUTPUTS}
+
+# Farbschema der Anzeige.
+THEMES = [
+    {"id": "dark", "name": "Dunkel"},
+    {"id": "light", "name": "Hell"},
+]
+THEME_IDS = {theme["id"] for theme in THEMES}
 
 # Sicherheitsnetz fuer den Modus "bis zur Tasteneingabe": Wenn niemand da ist,
 # soll der Ton nicht endlos laufen.
@@ -196,6 +205,8 @@ def load_config(path: str | Path) -> Config:
     view["day_end_hour"] = max(view["day_start_hour"] + 1, min(24, int(view["day_end_hour"])))
     if view["layout"] not in ("timegrid", "agenda"):
         raise ConfigError("view.layout muss 'timegrid' oder 'agenda' sein.")
+    if view["theme"] not in THEME_IDS:
+        raise ConfigError(f"view.theme muss {' oder '.join(sorted(THEME_IDS))} sein.")
     try:
         back = float(view["return_to_today_minutes"])
     except (TypeError, ValueError):
@@ -361,6 +372,7 @@ def editable_settings(config: Config) -> dict[str, Any]:
         },
         "view": {
             "days": int(config.view["days"]),
+            "theme": config.view["theme"],
             "layout": config.view["layout"],
             "day_start_hour": int(config.view["day_start_hour"]),
             "day_end_hour": int(config.view["day_end_hour"]),
@@ -386,6 +398,7 @@ def editable_settings(config: Config) -> dict[str, Any]:
         },
         "sounds": SOUNDS,
         "outputs": OUTPUTS,
+        "themes": THEMES,
         "alarm_hard_limit_seconds": ALARM_HARD_LIMIT_SECONDS,
         "calendars": [
             {
@@ -452,6 +465,9 @@ def settings_to_raw(payload: Any, previous: Config) -> dict[str, Any]:
     layout = str(view_in.get("layout") or "timegrid")
     if layout not in ("timegrid", "agenda"):
         raise ConfigError("Unbekannte Darstellung.")
+    theme = str(view_in.get("theme") or "dark")
+    if theme not in THEME_IDS:
+        raise ConfigError("Unbekanntes Farbschema.")
 
     try:
         brightness = float(dim_in.get("brightness", 0.55))
@@ -569,6 +585,7 @@ def settings_to_raw(payload: Any, previous: Config) -> dict[str, Any]:
         },
         "view": {
             "days": _clamp_int(view_in.get("days"), 1, 14, "Anzahl Tage"),
+            "theme": theme,
             "day_start_hour": start_hour,
             "day_end_hour": end_hour,
             "layout": layout,

@@ -122,6 +122,8 @@ function isCurrentWeek() {
 
 function render(data) {
   const locale = data.locale || "de-AT";
+  // Farbschema am Wurzelelement - das Stylesheet tauscht daran die Farben aus.
+  document.documentElement.dataset.theme = data.view.theme || "dark";
   const signature = JSON.stringify([data.days, data.view.range, data.view.layout]);
   if (signature !== lastRenderedSignature) {
     lastRenderedSignature = signature;

@@ -1,23 +1,94 @@
-/* Anzeige fuer ein Display ohne Eingabe: keine Scrollbalken, grosse Typografie,
-   dunkler Hintergrund, damit statische Flaechen das Panel nicht belasten. */
+﻿/* Anzeige fuer ein Display ohne Eingabe: keine Scrollbalken, grosse Typografie.
+   Saemtliche Farben stehen als Variablen hier oben - das helle Farbschema
+   weiter unten tauscht nur diese Werte aus. */
 
 :root {
+  /* Flaechen und Linien */
   --bg: #0d1117;
   --panel: #151b24;
   --panel-2: #1b222d;
   --line: #262e3a;
   --line-strong: #36404f;
+  --weekend-panel: #171d28;    /* Kopf- und Ganztagszeile am Wochenende */
+  --weekend-body: #12161f;     /* Stundenraster am Wochenende */
+  --edge-bg: #12161f;          /* Sammelzeilen vor 06:00 / nach 22:00 */
+  --edge-weekend: #141924;
+
+  /* Schrift */
   --fg: #e8edf5;
   --fg-dim: #9aa7b8;
   --fg-faint: #6b7686;
+
+  /* Akzent und Signalfarben */
   --today: #4f9cf9;
-  --weekend: #1a1f2b;
+  --on-primary: #06121f;       /* Schrift auf der Akzentflaeche */
+  --now: #ff5f56;
+  --ok: #46b46a;
+  --warn: #e2b13c;
+  --err: #e2643c;
+  --good-text: #6fd48c;
+  --bad-text: #ff8a70;
+
+  /* Termine: Grundton, in den die Kalenderfarbe eingemischt wird */
+  --event-base: #11161e;
+  --accent-base: #0f141c;      /* fuer Hervorhebungen, traegt weisse Schrift */
+  --on-accent: #ffffff;
+
+  /* Alarm und Dialog */
+  --alarm-base: #0b0f16;
+  --alarm-scrim: rgba(5, 8, 13, 0.78);
+  --dialog-scrim: rgba(4, 7, 12, 0.72);
+  --dialog-shadow: rgba(0, 0, 0, 0.55);
+  --input-bg: #0f141c;
+
   --gutter: 5.6rem;
   --allday-rows: 1;
   --dim: 1;
 
   font-size: clamp(13px, 0.95vw, 21px);
   color-scheme: dark;
+}
+
+/* Helles Farbschema: heller Hintergrund, dunkle Schrift. Heute hebt sich hier
+   ueber die Farbe ab statt ueber die Helligkeit - auf Weiss geht es nicht
+   heller. */
+:root[data-theme="light"] {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --panel-2: #f5f7fa;
+  --line: #e3e7ee;
+  --line-strong: #c9d1dd;
+  --weekend-panel: #eceff4;
+  --weekend-body: #f2f5f9;
+  --edge-bg: #f2f5f9;
+  --edge-weekend: #e9edf3;
+
+  --fg: #18202b;
+  --fg-dim: #55606f;
+  --fg-faint: #84909f;
+
+  --today: #1f6fd0;
+  --on-primary: #ffffff;
+  --now: #d93a2b;
+  --ok: #2f9e52;
+  --warn: #b07d10;
+  --err: #c1492a;
+  --good-text: #1e7a3c;
+  --bad-text: #b3341c;
+
+  --event-base: #ffffff;
+  /* Hervorhebungen bleiben kraeftig mit weisser Schrift - auf einem hellen
+     Grund waere die Kalenderfarbe sonst kaum noch zu erkennen. */
+  --accent-base: #1b2430;
+  --on-accent: #ffffff;
+
+  --alarm-base: #ffffff;
+  --alarm-scrim: rgba(28, 36, 48, 0.45);
+  --dialog-scrim: rgba(28, 36, 48, 0.4);
+  --dialog-shadow: rgba(20, 28, 40, 0.22);
+  --input-bg: #ffffff;
+
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -92,10 +163,10 @@ html, body {
 .status .dot {
   width: 0.55rem; height: 0.55rem;
   border-radius: 50%;
-  background: #46b46a;
+  background: var(--ok);
 }
-.status[data-state="stale"] .dot { background: #e2b13c; }
-.status[data-state="error"] .dot { background: #e2643c; }
+.status[data-state="stale"] .dot { background: var(--warn); }
+.status[data-state="error"] .dot { background: var(--err); }
 .status[data-state="ok"] { opacity: 0.55; }
 
 /* ---------- Raster ---------- */
@@ -128,7 +199,7 @@ html, body {
   gap: 0.45rem;
 }
 .dayhead { overflow: hidden; }
-.dayhead.weekend { background: #171d28; }
+.dayhead.weekend { background: var(--weekend-panel); }
 .board.compact .dmon { display: none; }
 .board.compact .dayhead .dname { font-size: 0.85rem; }
 /* Heute wird aufgehellt, die uebrigen Tage bleiben unveraendert. */
@@ -184,7 +255,7 @@ html, body {
   background: var(--panel-2);
   overflow: hidden;
 }
-.allday.weekend { background: #171d28; }
+.allday.weekend { background: var(--weekend-panel); }
 .allday.today { background: color-mix(in srgb, var(--today) 16%, var(--panel-2)); }
 
 .chip {
@@ -202,10 +273,10 @@ html, body {
    der heutige Tag nachmittags matter als die kommenden Tage. */
 .chip.past { opacity: 0.8; }
 .chip.highlight {
-  background: color-mix(in srgb, var(--c) 68%, #0f141c);
+  background: color-mix(in srgb, var(--c) 68%, var(--accent-base));
   border-left-width: 0.3rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 55%, transparent);
 }
 .eicon { margin-right: 0.3rem; }
@@ -230,13 +301,13 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0.18rem;
-  background: #12161f;
+  background: var(--edge-bg);
   overflow: hidden;
 }
 .edge.early { border-bottom: 1px solid var(--line-strong); }
 .edge.late { border-top: 1px solid var(--line-strong); }
-.edge.weekend { background: #141924; }
-.edge.today { background: color-mix(in srgb, var(--today) 15%, #12161f); }
+.edge.weekend { background: var(--edge-weekend); }
+.edge.today { background: color-mix(in srgb, var(--today) 15%, var(--edge-bg)); }
 
 .chip-time {
   font-variant-numeric: tabular-nums;
@@ -259,7 +330,7 @@ html, body {
 
 /* Tagesspalte */
 .daybody { position: relative; overflow: hidden; }
-.daybody.weekend { background: #12161f; }
+.daybody.weekend { background: var(--weekend-body); }
 .daybody.today { background: color-mix(in srgb, var(--today) 13%, transparent); }
 .hline {
   position: absolute;
@@ -271,7 +342,7 @@ html, body {
 .event {
   position: absolute;
   border-radius: 0.3rem;
-  background: color-mix(in srgb, var(--c) 26%, #11161e);
+  background: color-mix(in srgb, var(--c) 26%, var(--event-base));
   border-left: 0.22rem solid var(--c);
   padding: 0.18rem 0.35rem;
   overflow: hidden;
@@ -311,9 +382,9 @@ html, body {
 .event.cut-top { border-top: 2px dashed var(--c); border-top-left-radius: 0; border-top-right-radius: 0; }
 .event.cut-bottom { border-bottom: 2px dashed var(--c); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .event.highlight {
-  background: color-mix(in srgb, var(--c) 55%, #0f141c);
+  background: color-mix(in srgb, var(--c) 55%, var(--accent-base));
   border-left-width: 0.3rem;
-  color: #fff;
+  color: var(--on-accent);
 }
 .event.highlight .etitle { font-weight: 600; }
 .event.highlight .etime { color: rgba(255, 255, 255, 0.8); }
@@ -324,7 +395,7 @@ html, body {
   position: absolute;
   left: 0; right: 0;
   height: 0;
-  border-top: 2px solid #ff5f56;
+  border-top: 2px solid var(--now);
   z-index: 5;
   pointer-events: none;
 }
@@ -334,7 +405,7 @@ html, body {
   left: -0.3rem; top: -0.3rem;
   width: 0.6rem; height: 0.6rem;
   border-radius: 50%;
-  background: #ff5f56;
+  background: var(--now);
 }
 
 /* ---------- Agenda-Layout ---------- */
@@ -349,7 +420,7 @@ html, body {
   gap: 0.3rem;
   overflow: hidden;
 }
-.agenda.weekend { background: #12161f; }
+.agenda.weekend { background: var(--weekend-body); }
 .agenda.today { background: color-mix(in srgb, var(--today) 13%, transparent); }
 .agenda .item {
   border-left: 0.22rem solid var(--c);
@@ -359,8 +430,8 @@ html, body {
 }
 .agenda .item.past { opacity: 0.8; }
 .agenda .item.highlight {
-  background: color-mix(in srgb, var(--c) 60%, #0f141c);
-  color: #fff;
+  background: color-mix(in srgb, var(--c) 60%, var(--accent-base));
+  color: var(--on-accent);
   font-weight: 600;
 }
 .agenda .item .etime { font-size: 0.72rem; color: var(--fg-dim); font-variant-numeric: tabular-nums; }
@@ -377,7 +448,7 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 2vmin;
-  background: rgba(5, 8, 13, 0.78);
+  background: var(--alarm-scrim);
   backdrop-filter: blur(5px);
 }
 .alarm-overlay[hidden] { display: none; }
@@ -394,7 +465,7 @@ html, body {
   padding: 4vmin 5vmin;
   text-align: center;
   border-radius: 1.4vmin;
-  background: color-mix(in srgb, var(--c, #4f9cf9) 22%, #0b0f16);
+  background: color-mix(in srgb, var(--c, var(--today)) 22%, var(--alarm-base));
   border: 0.35vmin solid var(--c, #4f9cf9);
   animation: alarm-pulse 1.1s ease-in-out infinite;
 }
@@ -470,7 +541,7 @@ body.settings-open .gear { color: var(--fg); }
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(4, 7, 12, 0.72);
+  background: var(--dialog-scrim);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -488,7 +559,7 @@ body.settings-open .gear { color: var(--fg); }
   background: var(--panel);
   border: 1px solid var(--line-strong);
   border-radius: 0.8rem;
-  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55);
+  box-shadow: 0 1.5rem 4rem var(--dialog-shadow);
   overflow: hidden;
 }
 .dialog-head {
@@ -510,7 +581,7 @@ body.settings-open .gear { color: var(--fg); }
   background: var(--panel-2);
 }
 .dialog-foot .message { flex: 1; font-size: 0.82rem; color: var(--fg-dim); }
-.message.bad { color: #ff8a70; }
+.message.bad { color: var(--bad-text); }
 
 .sect { margin-bottom: 1.4rem; }
 .sect > h3 {
@@ -554,7 +625,7 @@ body.settings-open .gear { color: var(--fg); }
 .dialog input[type="text"],
 .dialog input[type="number"],
 .dialog select {
-  background: #0f141c;
+  background: var(--input-bg);
   border: 1px solid var(--line-strong);
   border-radius: 0.35rem;
   color: var(--fg);
@@ -612,15 +683,15 @@ body.settings-open .gear { color: var(--fg); }
   color: var(--fg);
 }
 .dialog button:hover { border-color: var(--fg-faint); }
-.dialog button.primary { background: var(--today); border-color: var(--today); color: #06121f; font-weight: 600; }
+.dialog button.primary { background: var(--today); border-color: var(--today); color: var(--on-primary); font-weight: 600; }
 .dialog button.primary:disabled { opacity: 0.5; cursor: default; }
-.dialog button.danger { color: #ff8a70; }
+.dialog button.danger { color: var(--bad-text); }
 .dialog button.add { width: 100%; }
 .dialog .dialog-head button.ghost { border: 0; background: none; color: var(--fg-dim); font-size: 1rem; }
 
 .test-result { font-size: 0.78rem; color: var(--fg-dim); }
-.test-result.good { color: #6fd48c; }
-.test-result.bad { color: #ff8a70; }
+.test-result.good { color: var(--good-text); }
+.test-result.bad { color: var(--bad-text); }
 
 /* ---------- Startbildschirm ---------- */
 .splash {
