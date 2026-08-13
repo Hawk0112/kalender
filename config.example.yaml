@@ -44,6 +44,9 @@ view:
   # Wurde mit den Tastern geblaettert: nach so vielen Minuten ohne weiteren
   # Druck von selbst zurueck auf die aktuelle Woche. 0 laesst sie stehen.
   return_to_today_minutes: 5
+  # Der Einstellungsdialog schliesst sich nach so vielen Sekunden ohne Eingabe
+  # von selbst. Jede Eingabe setzt die Frist neu. 0 schaltet das ab.
+  settings_timeout_seconds: 120
   # Nacht-Abdunklung des Displays (schont Augen und Panel)
   dim:
     enabled: true
@@ -84,8 +87,9 @@ button:
   # So lange halten, um den Pi neu zu starten. 0 schaltet das ab.
   reboot_hold_seconds: 20
   # Taster 2 und 3 gemeinsam so lange halten, um die Einstellungen zu oeffnen
-  # bzw. wieder zu schliessen. 0 schaltet das ab.
-  combo_hold_seconds: 2.0
+  # bzw. wieder zu schliessen. Bewusst lang gewaehlt, damit niemand
+  # versehentlich hineingeraet. 0 schaltet das ab.
+  combo_hold_seconds: 10.0
 
 # Auffaellige Termine: ueberschreiben Farbe und stellen ein Symbol voran.
 # Getroffen wird ueber Stichwoerter im Titel (Gross-/Kleinschreibung egal)

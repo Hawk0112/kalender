@@ -468,6 +468,23 @@ function buildForm(data) {
 
 /* ---------- oeffnen, speichern, schliessen ---------- */
 
+/* Der Dialog schliesst sich nach einer Weile ohne Eingabe von selbst. Sonst
+   bliebe das Geraet darin stehen, wenn ihn jemand versehentlich geoeffnet hat.
+   Jede Eingabe setzt die Frist neu - auch ein Tastendruck am Geraet. */
+let settingsTimer = null;
+
+function settingsTouch() {
+  clearTimeout(settingsTimer);
+  settingsTimer = null;
+  if (settingsEl.overlay.hidden) return;
+  const sekunden = Number(current?.view?.settings_timeout_seconds || 0);
+  if (sekunden > 0) settingsTimer = setTimeout(closeSettings, sekunden * 1000);
+}
+
+for (const typ of ["click", "keydown", "input", "change"]) {
+  settingsEl.overlay.addEventListener(typ, settingsTouch, true);
+}
+
 function setMessage(text, kind) {
   settingsEl.message.textContent = text || "";
   settingsEl.message.className = "message" + (kind ? ` ${kind}` : "");
@@ -485,9 +502,12 @@ async function openSettings() {
   } catch (err) {
     setMessage(`Einstellungen nicht ladbar: ${err}`, "bad");
   }
+  settingsTouch();
 }
 
 function closeSettings() {
+  clearTimeout(settingsTimer);
+  settingsTimer = null;
   navReset();    // Tastenfokus und Bildschirmtastatur zuruecksetzen
   stopAlarm();   // eine laufende Tonprobe beenden
   // Eine nicht gespeicherte Farbschema-Vorschau wieder zuruecknehmen.

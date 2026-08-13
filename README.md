@@ -248,7 +248,7 @@ praktisch, weil am Gerät sonst weder Maus noch Tastatur hängt.
 | **1** (GPIO 17, Pin 11) | Alarmton beenden; läutet gerade nichts: zurück auf die aktuelle Woche | 20 s: Neustart |
 | **2** (GPIO 27, Pin 13) | eine Woche vorwärts | wiederholt |
 | **3** (GPIO 22, Pin 15) | eine Woche zurück | wiederholt |
-| **2 + 3 zugleich** | – | 2 s: Einstellungen öffnen bzw. schließen |
+| **2 + 3 zugleich** | – | 10 s: Einstellungen öffnen bzw. schließen |
 
 Hältst du Taster 2 oder 3 gedrückt, wiederholt sich der Schritt nach einer
 halben Sekunde etwa achtmal je Sekunde. Das ist vor allem in den Einstellungen
@@ -325,9 +325,11 @@ springt auf heute.
 
 ### Einstellungen ohne Tastatur bedienen
 
-**Taster 2 und 3 zwei Sekunden gemeinsam halten** öffnet die Einstellungen —
-und schließt sie ebenso wieder. Damit ist der Kalender vollständig mit den drei
-Tastern bedienbar, ohne Maus und ohne Tastatur:
+**Taster 2 und 3 zehn Sekunden gemeinsam halten** öffnet die Einstellungen —
+und schließt sie ebenso wieder. Die Dauer ist bewusst lang gewählt: Der
+Kalender richtet sich an Menschen, die versehentlich beide Knöpfe drücken
+könnten, und soll dabei nicht in einen Dialog geraten. Damit ist er vollständig
+mit den drei Tastern bedienbar, ohne Maus und ohne Tastatur:
 
 | Taster | im Einstellungsdialog |
 |---|---|
@@ -351,13 +353,24 @@ Taster 3 gleich nach dem Öffnen landet direkt auf **Speichern**. Und weil
 Halten den Schritt wiederholt, kommst du durch den ganzen Dialog, indem du
 Taster 2 einfach gedrückt hältst.
 
-Ehrlicherweise: Für einen Kalendernamen oder ein Stichwort ist die
-Bildschirmtastatur gut brauchbar. Eine hundert Zeichen lange ICS-Adresse damit
-einzugeben ist mühsam — die trägst du besser einmalig per Maus, Tastatur oder
-über die `config.yaml` ein. Für alles danach reichen die drei Taster.
+Der Dialog **schließt sich nach zwei Minuten ohne Eingabe von selbst** und
+zeigt wieder den Kalender. Jeder Tastendruck setzt die Frist neu, es unterbricht
+dich also nicht beim Eintippen. Wer ihn versehentlich geöffnet hat, findet das
+Gerät danach von allein wieder im Normalzustand.
 
-Die Haltezeit für die Kombination stellst du in `config.yaml` unter
-`button.combo_hold_seconds` ein; `0` schaltet sie ab.
+Zwei Werte dazu in `config.yaml`:
+
+```yaml
+button:
+  combo_hold_seconds: 10      # 0 sperrt den Zugang zu den Einstellungen ganz
+view:
+  settings_timeout_seconds: 120
+```
+
+Ehrlicherweise: Eine hundert Zeichen lange ICS-Adresse mit drei Tastern
+einzugeben dauert seine Zeit. Es geht — und ist so gedacht, damit niemand
+Fremdes die privaten Kalenderadressen kennen muss —, aber plane dafür Ruhe ein.
+Für Namen, Stichwörter und alle übrigen Einstellungen ist die Bedienung zügig.
 
 **20 Sekunden gedrückt halten** startet den Pi neu — der Notausgang, wenn
 Anzeige oder Browser einmal hängen. Die Erkennung läuft vollständig im Dienst

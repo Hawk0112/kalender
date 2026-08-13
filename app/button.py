@@ -90,6 +90,10 @@ class _PressWatcher(threading.Thread):
     def run(self) -> None:
         gedrueckt = {action: False for action in self.devices}
         naechste = {action: 0.0 for action in self.devices}
+        # Waren beide Taster gemeinsam unten, bleibt der laenger gehaltene bis
+        # zum Loslassen stumm. Sonst schuettet er beim Loslassen des ersten
+        # eine ganze Serie von Wochenspruengen aus.
+        gesperrt: set[str] = set()
         combo_ab: float | None = None
         combo_gemeldet = False
         beide_moeglich = len(self.devices) == 2 and self.combo_seconds > 0
@@ -103,6 +107,7 @@ class _PressWatcher(threading.Thread):
 
             beide = beide_moeglich and all(zustand.values())
             if beide:
+                gesperrt.update(zustand)
                 if combo_ab is None:
                     combo_ab, combo_gemeldet = jetzt, False
                 elif not combo_gemeldet and jetzt - combo_ab >= self.combo_seconds:
@@ -114,13 +119,16 @@ class _PressWatcher(threading.Thread):
             for action, ist in zustand.items():
                 if not ist:
                     gedrueckt[action] = False
+                    gesperrt.discard(action)
+                    continue
+                if action in gesperrt:
+                    gedrueckt[action] = True
                     continue
                 if not gedrueckt[action]:
                     gedrueckt[action] = True
                     naechste[action] = jetzt + REPEAT_DELAY
-                    if not beide:
-                        self.owner.press(action)
-                elif not beide and jetzt >= naechste[action]:
+                    self.owner.press(action)
+                elif jetzt >= naechste[action]:
                     # Halten wiederholt den Druck.
                     naechste[action] = jetzt + REPEAT_INTERVAL
                     self.owner.press(action)

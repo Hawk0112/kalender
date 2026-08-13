@@ -33,6 +33,10 @@ DEFAULTS: dict[str, Any] = {
         # Nach so vielen Minuten ohne Tastendruck zurueck auf die aktuelle
         # Woche. 0 laesst die Ansicht stehen.
         "return_to_today_minutes": 5,
+        # Der Einstellungsdialog schliesst sich nach so vielen Sekunden ohne
+        # Eingabe von selbst - sonst bliebe das Geraet darin stehen, wenn ihn
+        # jemand versehentlich geoeffnet hat. 0 schaltet das ab.
+        "settings_timeout_seconds": 120,
         "dim": {
             "enabled": True,
             "start_hour": 22,
@@ -70,8 +74,9 @@ DEFAULTS: dict[str, Any] = {
         # das ab.
         "reboot_hold_seconds": 20,
         # Taster 2 und 3 gemeinsam so lange halten, um die Einstellungen zu
-        # oeffnen. 0 schaltet das ab.
-        "combo_hold_seconds": 2.0,
+        # oeffnen. Bewusst lang, damit niemand versehentlich hineingeraet.
+        # 0 schaltet das ab.
+        "combo_hold_seconds": 10.0,
     },
     "calendars": [],
     # Termine, die auffallen sollen - unabhaengig davon, aus welchem Kalender
@@ -212,9 +217,14 @@ def load_config(path: str | Path) -> Config:
         raise ConfigError(f"view.theme muss {' oder '.join(sorted(THEME_IDS))} sein.")
     try:
         back = float(view["return_to_today_minutes"])
+        dialog = float(view["settings_timeout_seconds"])
     except (TypeError, ValueError):
-        raise ConfigError("view.return_to_today_minutes muss eine Zahl sein.") from None
+        raise ConfigError(
+            "view.return_to_today_minutes und view.settings_timeout_seconds "
+            "muessen Zahlen sein."
+        ) from None
     view["return_to_today_minutes"] = max(0.0, min(240.0, back))
+    view["settings_timeout_seconds"] = max(0.0, min(3600.0, dialog))
 
     alarm = data["alarm"]
     if alarm["sound"] not in SOUND_IDS:
@@ -271,9 +281,9 @@ def load_config(path: str | Path) -> Config:
         raise ConfigError(
             "button.reboot_hold_seconds muss 0 (aus) oder zwischen 3 und 120 sein."
         )
-    if combo and not 0.5 <= combo <= 10:
+    if combo and not 0.5 <= combo <= 30:
         raise ConfigError(
-            "button.combo_hold_seconds muss 0 (aus) oder zwischen 0.5 und 10 sein."
+            "button.combo_hold_seconds muss 0 (aus) oder zwischen 0.5 und 30 sein."
         )
 
     button.update(pins)
@@ -603,6 +613,10 @@ def settings_to_raw(payload: Any, previous: Config) -> dict[str, Any]:
             "hour_step": _clamp_int(view_in.get("hour_step", 1), 1, 6, "Stundenlinien"),
             "return_to_today_minutes": _clamp_int(
                 view_in.get("return_to_today_minutes", 5), 0, 240, "Zurück auf heute"
+            ),
+            # Nur in der Datei einstellbar - unveraendert uebernehmen.
+            "settings_timeout_seconds": float(
+                previous.view["settings_timeout_seconds"]
             ),
             "dim": {
                 "enabled": bool(dim_in.get("enabled", True)),

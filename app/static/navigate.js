@@ -200,6 +200,7 @@ function keypadPress(action) {
 
 /** Wird von buttons.js aufgerufen, wenn die Einstellungen offen sind. */
 function navHandle(action, schritte) {
+  settingsTouch();     // jeder Tastendruck verlaengert die Frist des Dialogs
   if (action === "today") {
     if (navMode === "keypad") keypadPress(keypadKeys[keypadIndex].action);
     else navActivate();

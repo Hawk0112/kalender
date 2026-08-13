@@ -329,13 +329,17 @@ Reihen vertauscht; zählt gar nichts, das Ende der Leiste.
 | **1** (Pin 11) | kurz: Alarmton beenden – läutet nichts: zurück auf die aktuelle Woche. **20 s halten: Neustart** |
 | **2** (Pin 13) | eine Woche vorwärts, Halten wiederholt |
 | **3** (Pin 15) | eine Woche zurück, Halten wiederholt |
-| **2 + 3 zugleich, 2 s** | Einstellungen öffnen und wieder schließen |
+| **2 + 3 zugleich, 10 s** | Einstellungen öffnen und wieder schließen |
 
 Im Einstellungsdialog wandern Taster 2 und 3 von einem Bedienelement zum
 nächsten, Taster 1 aktiviert es. Bei Textfeldern erscheint eine
 Bildschirmtastatur. Der Kalender lässt sich damit vollständig ohne Maus und
-Tastatur bedienen — Einzelheiten in [README.md](README.md) unter „Einstellungen
-ohne Tastatur bedienen".
+Tastatur einrichten — auch die Kalenderadressen. Einzelheiten in
+[README.md](README.md) unter „Einstellungen ohne Tastatur bedienen".
+
+Die zehn Sekunden sind Absicht: Das Gerät soll nicht versehentlich in den
+Einstellungen landen. Aus demselben Grund schließt sich der Dialog nach zwei
+Minuten ohne Eingabe von selbst wieder.
 
 Wurde geblättert und danach fünf Minuten lang kein Taster mehr gedrückt,
 springt die Anzeige von selbst auf die aktuelle Woche zurück. Die Frist stellst
