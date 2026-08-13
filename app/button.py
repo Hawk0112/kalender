@@ -38,6 +38,28 @@ REBOOT_COMMANDS = [
 ]
 
 
+def reboot_system() -> None:
+    """System neu starten. Wirft eine Ausnahme, wenn kein Befehl greift."""
+    last_error = "kein Befehl ausfuehrbar"
+    for command in REBOOT_COMMANDS:
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, timeout=15)
+        except FileNotFoundError:
+            last_error = f"{command[-1]} nicht vorhanden"
+            continue
+        except subprocess.TimeoutExpired:
+            return  # Der Neustart laeuft bereits.
+        if result.returncode == 0:
+            return
+        last_error = (result.stderr or result.stdout or "").strip() or (
+            f"Rueckgabewert {result.returncode}"
+        )
+    raise RuntimeError(
+        f"{last_error}. Fehlt die sudo-Regel? Siehe install.sh bzw. "
+        "/etc/sudoers.d/kalender-reboot"
+    )
+
+
 class ButtonWatcher:
     def __init__(
         self,
@@ -210,23 +232,4 @@ class ButtonWatcher:
                 self._rebooting = False
 
     def _reboot(self) -> None:
-        last_error = "kein Befehl ausfuehrbar"
-        for command in REBOOT_COMMANDS:
-            try:
-                result = subprocess.run(
-                    command, capture_output=True, text=True, timeout=15
-                )
-            except FileNotFoundError:
-                last_error = f"{command[-1]} nicht vorhanden"
-                continue
-            except subprocess.TimeoutExpired:
-                return  # Der Neustart laeuft bereits.
-            if result.returncode == 0:
-                return
-            last_error = (result.stderr or result.stdout or "").strip() or (
-                f"Rueckgabewert {result.returncode}"
-            )
-        raise RuntimeError(
-            f"{last_error}. Fehlt die sudo-Regel? Siehe install.sh bzw. "
-            "/etc/sudoers.d/kalender-reboot"
-        )
+        reboot_system()

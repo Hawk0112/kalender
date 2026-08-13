@@ -28,6 +28,7 @@ from .buzzer import Buzzer
 from .events import build_days, collect_alarms, expand, parse_calendar
 from .sources import SourceFetcher
 from .store import CalendarStore
+from .updater import UpdateError, Updater
 
 log = logging.getLogger("kalender")
 
@@ -68,6 +69,8 @@ class AppContext:
         self.button = button
         self.buzzer = buzzer
         self.alarms: AlarmRunner | None = None
+        # Das Repository liegt eine Ebene ueber dem Paket.
+        self.updater = Updater(Path(__file__).resolve().parent.parent)
 
     def reload(self, config: Config) -> None:
         self.config = config
@@ -255,6 +258,26 @@ def create_app(ctx: AppContext) -> Flask:
         if not ctx.alarms.test(sound, seconds=3.0):
             return jsonify({"ok": False, "error": "Summer antwortet nicht"})
         return jsonify({"ok": True})
+
+    # -- Programmstand ---------------------------------------------------
+    @app.get("/api/update")
+    def api_update_check():
+        """Nur nachsehen, ob es etwas Neues gibt."""
+        try:
+            return jsonify({"ok": True, **ctx.updater.check()})
+        except UpdateError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/update")
+    def api_update_run():
+        """Neuen Stand holen, pruefen und bei Erfolg neu starten."""
+        try:
+            return jsonify({"ok": True, **ctx.updater.run()})
+        except UpdateError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        except Exception as exc:
+            log.exception("Aktualisierung fehlgeschlagen")
+            return jsonify({"ok": False, "error": str(exc)}), 500
 
     # -- Einstellungsseite ----------------------------------------------
     @app.get("/api/settings")

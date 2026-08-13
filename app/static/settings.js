@@ -338,6 +338,38 @@ function buildForm(data) {
   const interval = numberInput(data.refresh.interval_minutes, 1, 1440);
   const timeout = numberInput(data.refresh.timeout_seconds, 5, 120);
 
+  // Programmstand
+  const updateResult = h("div", { class: "test-result" });
+  const updateButton = h("button", {
+    type: "button", class: "ghost", text: "Nach Updates suchen",
+    onclick: async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      updateResult.className = "test-result";
+      updateResult.textContent = "sucht…";
+      try {
+        const response = await fetch("/api/update", { method: "POST" });
+        const data = await response.json();
+        if (!data.ok) {
+          updateResult.classList.add("bad");
+          updateResult.textContent = data.error;
+        } else if (!data.updated) {
+          updateResult.classList.add("good");
+          updateResult.textContent = data.message;
+        } else {
+          updateResult.classList.add("good");
+          updateResult.textContent =
+            `${data.message} (${data.commits} Änderung${data.commits === 1 ? "" : "en"})`;
+        }
+      } catch (err) {
+        updateResult.classList.add("bad");
+        updateResult.textContent = `Fehler: ${err}`;
+      } finally {
+        button.disabled = false;
+      }
+    },
+  });
+
   settingsEl.body.append(
     section("Kalender", "Die ICS-Adresse steht beim Anbieter unter „Kalender veröffentlichen“ oder „Geheime Adresse im iCal-Format“.",
       calendarList, addCalendar,
@@ -380,6 +412,9 @@ function buildForm(data) {
         field("Aktualisierung alle … Min.", interval),
         field("Zeitlimit je Abruf (Sek.)", timeout)),
       zoneList),
+    section("Programmstand",
+      `Läuft gerade: ${current?.version || "unbekannt"}. Der Knopf holt einen neuen Stand aus dem Repository, prüft ihn und startet das Gerät danach neu. Läuft der neue Stand nicht, wird der bisherige wiederhergestellt und nicht neu gestartet.`,
+      h("div", { class: "row-actions" }, updateButton, updateResult)),
   );
 
   form = () => ({
