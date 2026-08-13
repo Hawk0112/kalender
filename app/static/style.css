@@ -732,12 +732,35 @@ body.settings-open .gear { color: var(--fg); }
 }
 .keypad-value::after { content: "▌"; color: var(--today); }
 
+/* Erste Stufe: die Gruppen. Zweite Stufe: die Zeichen darin. */
+.keypad-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.keypad-groups .key { font-weight: 600; min-width: 3rem; }
+.keypad .key.group-open {
+  background: color-mix(in srgb, var(--today) 30%, var(--panel));
+  border-color: var(--today);
+}
+
 .keypad-keys {
   display: flex;
   flex-wrap: wrap;
   gap: 0.28rem;
-  max-height: 32vh;
+  max-height: 26vh;
   overflow-y: auto;
+}
+.keypad-keys:empty { display: none; }
+/* Textbausteine sind lang - sie bekommen eine eigene Zeile. */
+.keypad .key.snippet {
+  width: 100%;
+  text-align: left;
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 0.8rem;
 }
 .keypad .key {
   min-width: 2.1rem;

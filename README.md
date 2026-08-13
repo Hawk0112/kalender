@@ -343,10 +343,35 @@ Taster 1 in einen Änderungsmodus — die Umrandung wechselt dann von Blau auf
 gestricheltes Gelb, Taster 2 und 3 verstellen den Wert, ein weiterer Druck auf
 Taster 1 übernimmt ihn.
 
-Bei **Textfeldern** erscheint unten eine Bildschirmtastatur. Taster 2 und 3
-wandern von Zeichen zu Zeichen, Taster 1 schreibt es. Am Ende der Zeichen
-stehen `ABC` zum Umschalten der Groß- und Kleinschreibung, `Leer`, `⌫`,
-`Leeren`, `Abbruch` und `Fertig`.
+### Die Bildschirmtastatur
+
+Bei **Textfeldern** erscheint unten eine Bildschirmtastatur. Sie arbeitet in
+zwei Stufen, damit man nicht durch achtzig Zeichen wandern muss:
+
+1. **Gruppe wählen** — `a–i`, `j–r`, `s–z`, `0–9`, `ABC`, `äöü`, `.:/`,
+   `Bausteine`, `Befehle`. Taster 2 und 3 wandern, Taster 1 öffnet die Gruppe.
+2. **Zeichen wählen** — dieselbe Bedienung innerhalb der Gruppe. Nach dem
+   Schreiben bleibt die Gruppe offen, aufeinanderfolgende Buchstaben gehen also
+   schnell. Ganz am Ende jeder Gruppe steht `◀ Gruppen`; ein Schritt *zurück*
+   vom ersten Zeichen führt direkt dorthin.
+
+In der Gruppe **Bausteine** stecken ganze Textstücke, die in Kalenderadressen
+immer wieder vorkommen:
+
+```
+https://          calendar.google.com/calendar/ical/
+/private-         %40group.calendar.google.com
+/basic.ics        /public/basic.ics        .ics        webcal://
+```
+
+Unter **Befehle** liegen Leerzeichen, `⌫ Zeichen löschen`, `Alles leeren`,
+`Abbruch` und `Fertig`.
+
+Wie viel das ausmacht, habe ich gemessen: Eine vollständige Google-Adresse mit
+109 Zeichen braucht **262 Tastendrücke**, also 2,4 je Zeichen — die Bausteine
+allein decken davon 89 Zeichen mit fünf Tastendrücken ab. Ohne die zwei Stufen
+und die Bausteine wären es über dreitausend gewesen. Weil Halten den Schritt
+wiederholt, sind die meisten dieser Drücke ohnehin nur gehaltene Taster.
 
 Zwei Handgriffe, die viel Zeit sparen: Die Auswahl **läuft um** — ein Druck auf
 Taster 3 gleich nach dem Öffnen landet direkt auf **Speichern**. Und weil
@@ -367,10 +392,10 @@ view:
   settings_timeout_seconds: 120
 ```
 
-Ehrlicherweise: Eine hundert Zeichen lange ICS-Adresse mit drei Tastern
-einzugeben dauert seine Zeit. Es geht — und ist so gedacht, damit niemand
-Fremdes die privaten Kalenderadressen kennen muss —, aber plane dafür Ruhe ein.
-Für Namen, Stichwörter und alle übrigen Einstellungen ist die Bedienung zügig.
+So lässt sich das Gerät vollständig ohne Maus und Tastatur einrichten — auch
+die privaten Kalenderadressen, die dadurch niemand außer dem Anwender kennen
+muss. Für eine lange Adresse plane trotzdem ein paar ruhige Minuten ein; für
+Namen, Stichwörter und alle übrigen Einstellungen geht es zügig.
 
 **20 Sekunden gedrückt halten** startet den Pi neu — der Notausgang, wenn
 Anzeige oder Browser einmal hängen. Die Erkennung läuft vollständig im Dienst
