@@ -147,7 +147,12 @@ class SetupMode:
             return ""
         try:
             code = segno.make(text, error="m")
-            return code.svg_inline(scale=1, border=2, dark="#000000", light="#ffffff")
+            # omitsize laesst width/height weg und setzt stattdessen eine
+            # viewBox. Nur damit skaliert der Browser die Zeichnung mit - sonst
+            # bliebe sie winzig in der linken oberen Ecke stehen.
+            return code.svg_inline(
+                scale=1, border=2, omitsize=True, dark="#000000", light="#ffffff"
+            )
         except Exception as exc:
             log.warning("QR-Code nicht erzeugbar: %s", exc)
             return ""
