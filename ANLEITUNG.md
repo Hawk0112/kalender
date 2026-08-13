@@ -248,20 +248,14 @@ Farbe ein. Der Knopf **Testen** sagt dir
 sofort, ob die Adresse stimmt und wie viele Termine sie enthält. Danach
 *Speichern* – die Anzeige übernimmt es ohne Neustart.
 
-Der Demokalender ist zu Beginn eingetragen, damit du überhaupt etwas siehst. Er
-lässt sich nicht über das Zahnrad entfernen, weil er eine lokale Datei ist.
-Wenn du ihn loswerden willst, nimm ihn aus der Datei:
+Ausgeliefert wird ohne Kalender: Bis du den ersten einträgst, zeigt die
+Anzeige eine leere Woche mit dem Hinweis „kein Kalender eingetragen – Zahnrad
+öffnen". Es muss also nichts weggeräumt werden.
 
-```bash
-nano ~/kalender/config.yaml
-```
-
-Den Block mit `name: Demo` löschen, mit `Strg`+`O` speichern, `Strg`+`X`
-schließen, dann:
-
-```bash
-sudo systemctl restart kalender
-```
+Zum Ausprobieren ohne eigene Adressen liegt ein Beispielkalender bei. Ihn
+aktivierst du, indem du in `~/kalender/config.yaml` bei `calendars` die eckigen
+Klammern löschst und den auskommentierten Demo-Block einfügst — gebraucht wird
+er aber nicht.
 
 ---
 

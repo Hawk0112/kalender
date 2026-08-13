@@ -102,11 +102,15 @@ highlights:
 # Kalenderquellen: oeffentliche bzw. geheime ICS-/iCal-URLs.
 # Google Kalender: Einstellungen -> Kalender -> "Geheime Adresse im iCal-Format"
 # Nextcloud/Outlook/Apple: "Kalender veroeffentlichen" -> ICS-Link
-calendars:
-  - name: Demo
-    url: demo/demo.ics        # lokale Datei zum Ausprobieren
-    color: "#4f9cf9"
+#
+# Leer ausgeliefert: nach der Installation zeigt der Kalender eine leere Woche.
+# Eintragen am besten ueber das Zahnrad in der Anzeige - dort gibt es zu jeder
+# Adresse einen Knopf zum Testen.
+calendars: []
 
+  # Beispiele - zum Verwenden die Raute am Zeilenanfang entfernen und die
+  # eckigen Klammern oben loeschen:
+  #
   # - name: Familie
   #   url: https://calendar.google.com/calendar/ical/xxxxx/basic.ics
   #   color: "#f2b53c"
@@ -116,3 +120,8 @@ calendars:
   #   color: "#5ec269"
   #   # Termine, deren Titel diesen Text enthaelt, werden ausgeblendet:
   #   # exclude: ["Absage", "privat"]
+  #
+  # Zum Ausprobieren ohne eigene Kalender liegt ein Beispielkalender bei:
+  # - name: Demo
+  #   url: demo/demo.ics
+  #   color: "#4f9cf9"

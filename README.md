@@ -67,6 +67,12 @@ Nach dem Neustart erscheint die Wochenansicht automatisch im Vollbild.
 Mehrere Kalender werden farblich unterschieden. Die geheimen URLs stehen im
 Klartext in `config.yaml`; die Datei ist deshalb in `.gitignore` ausgenommen.
 
+Ausgeliefert wird **ohne** Kalender. Bis der erste eingetragen ist, zeigt die
+Anwendung eine leere Woche — mit Datum, Stundenraster und Jetzt-Linie, nur ohne
+Termine — und oben rechts den Hinweis „kein Kalender eingetragen – Zahnrad
+öffnen". Direkt nach dem Eintragen steht dort kurz „Kalender werden geholt…",
+bis der erste Abruf durch ist.
+
 ## Einstellungen über das Zahnrad
 
 Oben rechts neben der Uhr sitzt ein Zahnrad. Ein Klick darauf öffnet die
@@ -561,8 +567,9 @@ cd C:\Projekte\Kalender
 ```
 
 Legt Umgebung und `config.yaml` an und öffnet die Anzeige im Browser. In der
-Vorlage ist der Demokalender `demo/demo.ics` eingetragen, damit sofort Termine
-sichtbar sind.
+Vorlage ist noch kein Kalender eingetragen — die Anzeige zeigt dann eine leere
+Woche. Zum Ausprobieren liegt `demo/demo.ics` bei; den zugehörigen Block in
+`config.yaml` musst du nur einkommentieren.
 
 ## Deinstallation
 

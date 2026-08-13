@@ -482,6 +482,12 @@ function updateStatus(data) {
   if (!lastFetchOk) {
     state = "error";
     text = "keine Verbindung zum Dienst";
+  } else if (status.empty) {
+    // Frisch installiert: leere Woche mit einem Hinweis, was zu tun ist.
+    state = "stale";
+    text = "kein Kalender eingetragen – Zahnrad öffnen";
+  } else if (status.loading) {
+    text = "Kalender werden geholt…";
   } else if (!status.online && status.last_success) {
     state = status.stale ? "error" : "stale";
     text = `offline – Stand ${hhmm(status.last_success) || "unbekannt"}`;

@@ -181,9 +181,20 @@ class CalendarStore:
             (state.last_success for state in snap.sources if state.last_success),
             default=None,
         )
+        # Ohne eingetragene Kalender ist nichts veraltet - es gibt schlicht
+        # nichts zu holen. Die Anzeige weist stattdessen darauf hin.
+        empty = not snap.sources
+        # Gerade erst eingetragen: der erste Abruf laeuft noch. Das ist kein
+        # veralteter Stand, sondern schlicht noch keiner.
+        loading = not empty and newest is None and not problems
         return {
+            "empty": empty,
+            "loading": loading,
             "online": not problems,
-            "stale": newest is None or (now - newest) > stale_after,
+            "stale": (
+                False if (empty or loading)
+                else (newest is None or (now - newest) > stale_after)
+            ),
             "last_success": newest.isoformat() if newest else None,
             "last_attempt": snap.last_attempt.isoformat() if snap.last_attempt else None,
             "problems": problems,
