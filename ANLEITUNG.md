@@ -669,6 +669,33 @@ Alle Einstellungen im Einzelnen sind in [README.md](README.md) beschrieben.
 
 ## Neue Programmfassung einspielen
 
+### Am einfachsten: über das Zahnrad
+
+Ist die Installation per `git clone` entstanden, brauchst du weder Tastatur
+noch SSH. Öffne das Zahnrad, geh ganz nach unten zum Abschnitt
+**Programmstand** und klicke **Nach Updates suchen**.
+
+Der Knopf fragt beim Repository nach, holt einen neuen Stand, gleicht bei
+Bedarf die Bibliotheken ab und startet den Pi danach neu. Gibt es nichts Neues,
+meldet er „Bereits auf dem neuesten Stand" und lässt alles unberührt.
+
+Vor dem Neustart läuft ein Probelauf: Lässt sich das Programm laden und die
+Konfiguration lesen? Schlägt er fehl, wird der vorherige Stand
+wiederhergestellt und **nicht** neu gestartet — die Meldung nennt dann die
+Ursache. So kann ein fehlerhafter Stand das Gerät nicht lahmlegen.
+
+Bei einem **privaten** Repository muss der Pi ohne Rückfrage darauf zugreifen
+können, sonst meldet der Knopf einen Fehler. Dafür einmalig auf dem Pi:
+
+```bash
+git config --global credential.helper store
+```
+
+Danach einmal `git pull` von Hand ausführen und Benutzername plus Zugriffstoken
+eingeben — ab dann merkt sich der Pi die Zugangsdaten.
+
+### Von Hand
+
 Das Betriebssystem bleibt unangetastet, es werden nur die Programmdateien
 ersetzt. Deine `config.yaml` mit allen Kalendern und Einstellungen bleibt
 erhalten – ebenso `.venv` und der Zwischenspeicher.

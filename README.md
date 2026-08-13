@@ -18,6 +18,7 @@ beim Einschalten des Raspberry automatisch im Vollbild.
 | `app/button.py` | Taster am GPIO zum Abschalten des Alarmtons |
 | `app/buzzer.py` | Piezo-Summer am GPIO, erzeugt die Alarmtöne per PWM |
 | `app/alarm_runner.py` | löst den Summer aus, wenn eine Erinnerung fällig wird |
+| `app/updater.py` | holt neue Programmstände, prüft sie und startet neu |
 | `kiosk/start-kiosk.sh` | startet Chromium im Kiosk-Modus, startet ihn bei Absturz neu |
 | `kiosk/stop-kiosk.sh` | beendet die Vollbildanzeige, um am Desktop zu arbeiten |
 | `systemd/` | Vorlage für den Dienst `kalender.service` |
@@ -417,6 +418,28 @@ Verhalten bei Störungen:
 Das Betriebssystem bleibt unangetastet, es werden nur die Programmdateien
 ersetzt. **Erhalten bleiben** in jedem Fall `config.yaml` (deine Kalender und
 Einstellungen), die Sicherung `config.yaml.bak` und der Zwischenspeicher.
+
+### Über das Zahnrad (ohne Tastatur)
+
+Im Einstellungsdialog gibt es unten den Abschnitt **Programmstand** mit dem
+Knopf **Nach Updates suchen**. Er fragt beim Repository nach, holt einen neuen
+Stand, gleicht bei Bedarf die Bibliotheken ab und startet das Gerät danach neu.
+Gibt es nichts Neues, meldet er das und lässt alles unberührt.
+
+**Die Absicherung dabei:** Nach dem Holen läuft ein Probelauf — lässt sich das
+Programm laden und die Konfiguration lesen? Schlägt er fehl, wird der vorherige
+Stand wiederhergestellt und **nicht** neu gestartet; die Meldung nennt die
+Ursache. Ohne diese Prüfung stünde das Gerät nach dem Neustart mit einem
+defekten Programm da, und man käme nur noch per SSH heran.
+
+Voraussetzung ist, dass die Installation per `git clone` entstanden ist und der
+Pi das Repository ohne Rückfrage erreicht. Bei einem privaten Repository heißt
+das: Zugangsdaten hinterlegt (`git config --global credential.helper store`)
+oder das Repository ist öffentlich. Sonst meldet der Knopf einen Fehler, weil
+niemand da ist, der ein Passwort eintippen könnte.
+
+Wurde `kiosk/start-kiosk.sh` mit aktualisiert, genügt der Neustart ohnehin —
+die Datei wird beim Hochfahren neu gelesen.
 
 ### Mit Git (am bequemsten)
 
