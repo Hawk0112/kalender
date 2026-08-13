@@ -24,7 +24,26 @@ function applyButtonCounts(data) {
   const delta = (name) => Math.max(0, (data[name] || 0) - (buttonCounts[name] || 0));
   const today = delta("today");
   const steps = delta("forward") - delta("back");
+  const settings = delta("settings");
   buttonCounts = data;
+
+  // Taster 2 und 3 zusammen: Einstellungen oeffnen bzw. wieder schliessen.
+  if (settings > 0) {
+    if (settingsEl.overlay.hidden) {
+      goToday();          // beim Oeffnen gleich auf die aktuelle Woche
+      openSettings().then(navStart);
+    } else {
+      closeSettings();
+    }
+    return;
+  }
+
+  // Bei offenen Einstellungen steuern die Taster den Dialog.
+  if (!settingsEl.overlay.hidden) {
+    if (steps !== 0) navHandle("forward", steps);
+    if (today > 0) navHandle("today", 0);
+    return;
+  }
 
   if (today > 0) {
     // Ein laufender Alarm hat Vorrang, sonst zurueck auf die aktuelle Woche.

@@ -488,6 +488,7 @@ async function openSettings() {
 }
 
 function closeSettings() {
+  navReset();    // Tastenfokus und Bildschirmtastatur zuruecksetzen
   stopAlarm();   // eine laufende Tonprobe beenden
   // Eine nicht gespeicherte Farbschema-Vorschau wieder zuruecknehmen.
   document.documentElement.dataset.theme = current?.view?.theme || "dark";

@@ -246,8 +246,13 @@ praktisch, weil am Gerät sonst weder Maus noch Tastatur hängt.
 | Taster | kurz drücken | lang drücken |
 |---|---|---|
 | **1** (GPIO 17, Pin 11) | Alarmton beenden; läutet gerade nichts: zurück auf die aktuelle Woche | 20 s: Neustart |
-| **2** (GPIO 27, Pin 13) | eine Woche vorwärts | – |
-| **3** (GPIO 22, Pin 15) | eine Woche zurück | – |
+| **2** (GPIO 27, Pin 13) | eine Woche vorwärts | wiederholt |
+| **3** (GPIO 22, Pin 15) | eine Woche zurück | wiederholt |
+| **2 + 3 zugleich** | – | 2 s: Einstellungen öffnen bzw. schließen |
+
+Hältst du Taster 2 oder 3 gedrückt, wiederholt sich der Schritt nach einer
+halben Sekunde etwa achtmal je Sekunde. Das ist vor allem in den Einstellungen
+wichtig, siehe unten.
 
 ### Verdrahtung
 
@@ -317,6 +322,42 @@ nach … Min."; `0` lässt die Ansicht stehen.
 
 Ist eine Tastatur angesteckt, tun die Pfeiltasten `←` und `→` dasselbe, `Pos1`
 springt auf heute.
+
+### Einstellungen ohne Tastatur bedienen
+
+**Taster 2 und 3 zwei Sekunden gemeinsam halten** öffnet die Einstellungen —
+und schließt sie ebenso wieder. Damit ist der Kalender vollständig mit den drei
+Tastern bedienbar, ohne Maus und ohne Tastatur:
+
+| Taster | im Einstellungsdialog |
+|---|---|
+| **2** / **3** | zum nächsten bzw. vorigen Bedienelement |
+| **1** | Element aktivieren |
+| **2 + 3** | Einstellungen schließen |
+
+Was „aktivieren" bedeutet, hängt vom Element ab. Ein **Knopf** wird gedrückt,
+ein **Häkchen** umgeschaltet. Bei **Auswahl- und Zahlenfeldern** schaltet
+Taster 1 in einen Änderungsmodus — die Umrandung wechselt dann von Blau auf
+gestricheltes Gelb, Taster 2 und 3 verstellen den Wert, ein weiterer Druck auf
+Taster 1 übernimmt ihn.
+
+Bei **Textfeldern** erscheint unten eine Bildschirmtastatur. Taster 2 und 3
+wandern von Zeichen zu Zeichen, Taster 1 schreibt es. Am Ende der Zeichen
+stehen `ABC` zum Umschalten der Groß- und Kleinschreibung, `Leer`, `⌫`,
+`Leeren`, `Abbruch` und `Fertig`.
+
+Zwei Handgriffe, die viel Zeit sparen: Die Auswahl **läuft um** — ein Druck auf
+Taster 3 gleich nach dem Öffnen landet direkt auf **Speichern**. Und weil
+Halten den Schritt wiederholt, kommst du durch den ganzen Dialog, indem du
+Taster 2 einfach gedrückt hältst.
+
+Ehrlicherweise: Für einen Kalendernamen oder ein Stichwort ist die
+Bildschirmtastatur gut brauchbar. Eine hundert Zeichen lange ICS-Adresse damit
+einzugeben ist mühsam — die trägst du besser einmalig per Maus, Tastatur oder
+über die `config.yaml` ein. Für alles danach reichen die drei Taster.
+
+Die Haltezeit für die Kombination stellst du in `config.yaml` unter
+`button.combo_hold_seconds` ein; `0` schaltet sie ab.
 
 **20 Sekunden gedrückt halten** startet den Pi neu — der Notausgang, wenn
 Anzeige oder Browser einmal hängen. Die Erkennung läuft vollständig im Dienst

@@ -28,7 +28,17 @@ from typing import Any, Callable
 
 log = logging.getLogger(__name__)
 
-ACTIONS = ("today", "forward", "back")
+# Die drei angeschlossenen Taster ...
+PHYSICAL = ("today", "forward", "back")
+# ... und zusaetzlich die Kombination aus Taster 2 und 3, die als eigene
+# Meldung gilt: sie oeffnet und schliesst die Einstellungen.
+ACTIONS = PHYSICAL + ("settings",)
+
+# Beim Halten eines Tasters wiederholt sich der Druck - ohne das waere das
+# Durchlaufen der Bildschirmtastatur eine Qual.
+REPEAT_DELAY = 0.6
+REPEAT_INTERVAL = 0.12
+POLL_INTERVAL = 0.04
 
 # Erster Befehl, der sich ausfuehren laesst, gewinnt. Das dafuer noetige
 # sudo-Recht legt install.sh an - eng begrenzt auf genau diesen Befehl.
@@ -60,6 +70,62 @@ def reboot_system() -> None:
     )
 
 
+class _PressWatcher(threading.Thread):
+    """Beobachtet Taster 2 und 3 selbst, statt sich auf Einzelereignisse zu
+    verlassen. Nur so lassen sich zwei Dinge umsetzen, die gpiozero von Haus
+    aus nicht bietet: Wiederholung beim Halten und das gleichzeitige Druecken
+    beider Taster.
+    """
+
+    def __init__(self, owner: ButtonWatcher, devices: dict[str, Any], combo: float):
+        super().__init__(daemon=True, name="button-watch")
+        self.owner = owner
+        self.devices = devices
+        self.combo_seconds = combo
+        self._stop = threading.Event()
+
+    def shutdown(self) -> None:
+        self._stop.set()
+
+    def run(self) -> None:
+        gedrueckt = {action: False for action in self.devices}
+        naechste = {action: 0.0 for action in self.devices}
+        combo_ab: float | None = None
+        combo_gemeldet = False
+        beide_moeglich = len(self.devices) == 2 and self.combo_seconds > 0
+
+        while not self._stop.wait(POLL_INTERVAL):
+            jetzt = time.monotonic()
+            try:
+                zustand = {a: bool(d.is_pressed) for a, d in self.devices.items()}
+            except Exception:
+                continue
+
+            beide = beide_moeglich and all(zustand.values())
+            if beide:
+                if combo_ab is None:
+                    combo_ab, combo_gemeldet = jetzt, False
+                elif not combo_gemeldet and jetzt - combo_ab >= self.combo_seconds:
+                    self.owner.press("settings")
+                    combo_gemeldet = True
+            else:
+                combo_ab = None
+
+            for action, ist in zustand.items():
+                if not ist:
+                    gedrueckt[action] = False
+                    continue
+                if not gedrueckt[action]:
+                    gedrueckt[action] = True
+                    naechste[action] = jetzt + REPEAT_DELAY
+                    if not beide:
+                        self.owner.press(action)
+                elif not beide and jetzt >= naechste[action]:
+                    # Halten wiederholt den Druck.
+                    naechste[action] = jetzt + REPEAT_INTERVAL
+                    self.owner.press(action)
+
+
 class ButtonWatcher:
     def __init__(
         self,
@@ -71,6 +137,9 @@ class ButtonWatcher:
         self.bounce_time = float(settings.get("bounce_time", 0.05))
         # 0 schaltet den Neustart per langem Druck ab.
         self.reboot_hold_seconds = float(settings.get("reboot_hold_seconds", 20))
+        # Taster 2 und 3 gemeinsam so lange halten, um die Einstellungen zu
+        # oeffnen. 0 schaltet das ab.
+        self.combo_hold_seconds = float(settings.get("combo_hold_seconds", 2.0))
         # 0 bedeutet: dieser Taster ist nicht angeschlossen.
         self.pins: dict[str, int] = {
             "today": int(settings.get("gpio", 17)),
@@ -87,6 +156,7 @@ class ButtonWatcher:
         self._rebooting = False
         self._on_reboot = on_reboot or self._reboot
         self._listeners: list[Callable[[str], None]] = []
+        self._watcher: _PressWatcher | None = None
         self.error: str | None = None
 
     def add_listener(self, callback: Callable[[str], None]) -> None:
@@ -105,7 +175,7 @@ class ButtonWatcher:
             log.info("Taster nicht aktiv: %s", self.error)
             return
 
-        for action in ACTIONS:
+        for action in PHYSICAL:
             pin = self.pins[action]
             if pin <= 0:
                 continue
@@ -119,9 +189,12 @@ class ButtonWatcher:
                     options["hold_repeat"] = False
 
                 device = Button(pin, **options)
-                device.when_pressed = self._make_handler(action)
-                if action == "today" and self.reboot_hold_seconds > 0:
-                    device.when_held = self._on_hold
+                # Taster 2 und 3 werden von einem eigenen Beobachter behandelt:
+                # er kennt Wiederholung beim Halten und die Kombination.
+                if action == "today":
+                    device.when_pressed = self._make_handler(action)
+                    if self.reboot_hold_seconds > 0:
+                        device.when_held = self._on_hold
                 self._devices[action] = device
                 log.info("Taster '%s' aktiv an GPIO%d", action, pin)
             except Exception as exc:
@@ -130,10 +203,25 @@ class ButtonWatcher:
 
         if not self._devices:
             self.error = self._errors.get("today") or "kein Taster nutzbar"
-        elif self.reboot_hold_seconds > 0 and "today" in self._devices:
+            return
+
+        if self.reboot_hold_seconds > 0 and "today" in self._devices:
             log.info("Neustart bei %.0f s Dauerdruck", self.reboot_hold_seconds)
 
+        navigable = {a: d for a, d in self._devices.items() if a in ("forward", "back")}
+        if navigable:
+            self._watcher = _PressWatcher(self, navigable, self.combo_hold_seconds)
+            self._watcher.start()
+            if len(navigable) == 2 and self.combo_hold_seconds > 0:
+                log.info(
+                    "Einstellungen bei %.1f s Druck auf Taster 2 und 3 zugleich",
+                    self.combo_hold_seconds,
+                )
+
     def stop(self) -> None:
+        if self._watcher is not None:
+            self._watcher.shutdown()
+            self._watcher = None
         for device in self._devices.values():
             try:
                 device.close()
@@ -203,13 +291,19 @@ class ButtonWatcher:
             "available": self.available,
             "reboot_hold_seconds": self.reboot_hold_seconds,
             "error": self.error,
+            "combo_hold_seconds": self.combo_hold_seconds,
+            "combo_available": (
+                self.combo_hold_seconds > 0
+                and "forward" in self._devices
+                and "back" in self._devices
+            ),
             "buttons": {
                 action: {
                     "gpio": self.pins[action],
                     "available": action in self._devices,
                     "error": self._errors.get(action),
                 }
-                for action in ACTIONS
+                for action in PHYSICAL
             },
         }
 

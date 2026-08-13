@@ -689,6 +689,70 @@ body.settings-open .gear { color: var(--fg); }
 .dialog button.add { width: 100%; }
 .dialog .dialog-head button.ghost { border: 0; background: none; color: var(--fg-dim); font-size: 1rem; }
 
+/* ---------- Bedienung mit den drei Tastern ---------- */
+/* Der Fokus muss aus einigen Metern Entfernung erkennbar sein. */
+.nav-active {
+  outline: 0.2rem solid var(--today) !important;
+  outline-offset: 0.15rem;
+  border-radius: 0.3rem;
+}
+/* Im Aenderungsmodus verstellen Taster 2 und 3 den Wert. */
+.nav-edit {
+  outline-color: var(--warn) !important;
+  outline-style: dashed !important;
+}
+
+.keypad {
+  border-top: 1px solid var(--line-strong);
+  background: var(--panel-2);
+  padding: 0.7rem 1.1rem 0.9rem;
+}
+.keypad[hidden] { display: none; }
+
+.keypad-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin-bottom: 0.5rem;
+  min-height: 1.8rem;
+}
+.keypad-label {
+  font-size: 0.74rem;
+  color: var(--fg-dim);
+  white-space: nowrap;
+}
+.keypad-value {
+  font-size: 1.05rem;
+  color: var(--fg);
+  word-break: break-all;
+  border-bottom: 2px solid var(--today);
+  padding-bottom: 0.1rem;
+  min-height: 1.4rem;
+  flex: 1;
+}
+.keypad-value::after { content: "▌"; color: var(--today); }
+
+.keypad-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  max-height: 32vh;
+  overflow-y: auto;
+}
+.keypad .key {
+  min-width: 2.1rem;
+  padding: 0.35rem 0.4rem;
+  font-size: 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.3rem;
+  color: var(--fg);
+  cursor: pointer;
+}
+.keypad .key.wide { min-width: 4.5rem; }
+.keypad .key.primary { background: var(--today); border-color: var(--today); color: var(--on-primary); font-weight: 600; }
+.keypad .key.danger { color: var(--bad-text); }
+
 .test-result { font-size: 0.78rem; color: var(--fg-dim); }
 .test-result.good { color: var(--good-text); }
 .test-result.bad { color: var(--bad-text); }

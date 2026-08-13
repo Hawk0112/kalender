@@ -83,6 +83,9 @@ button:
   bounce_time: 0.05   # Entprellzeit in Sekunden
   # So lange halten, um den Pi neu zu starten. 0 schaltet das ab.
   reboot_hold_seconds: 20
+  # Taster 2 und 3 gemeinsam so lange halten, um die Einstellungen zu oeffnen
+  # bzw. wieder zu schliessen. 0 schaltet das ab.
+  combo_hold_seconds: 2.0
 
 # Auffaellige Termine: ueberschreiben Farbe und stellen ein Symbol voran.
 # Getroffen wird ueber Stichwoerter im Titel (Gross-/Kleinschreibung egal)

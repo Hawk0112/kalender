@@ -69,6 +69,9 @@ DEFAULTS: dict[str, Any] = {
         # So lange gedrueckt halten, um das System neu zu starten. 0 schaltet
         # das ab.
         "reboot_hold_seconds": 20,
+        # Taster 2 und 3 gemeinsam so lange halten, um die Einstellungen zu
+        # oeffnen. 0 schaltet das ab.
+        "combo_hold_seconds": 2.0,
     },
     "calendars": [],
     # Termine, die auffallen sollen - unabhaengig davon, aus welchem Kalender
@@ -244,6 +247,7 @@ def load_config(path: str | Path) -> Config:
         pins = {key: int(button[key]) for key in pin_keys}
         bounce = float(button["bounce_time"])
         hold = float(button["reboot_hold_seconds"])
+        combo = float(button["combo_hold_seconds"])
     except (TypeError, ValueError):
         raise ConfigError(
             "button: Pin-Nummern, bounce_time und reboot_hold_seconds muessen "
@@ -267,10 +271,15 @@ def load_config(path: str | Path) -> Config:
         raise ConfigError(
             "button.reboot_hold_seconds muss 0 (aus) oder zwischen 3 und 120 sein."
         )
+    if combo and not 0.5 <= combo <= 10:
+        raise ConfigError(
+            "button.combo_hold_seconds muss 0 (aus) oder zwischen 0.5 und 10 sein."
+        )
 
     button.update(pins)
     button["bounce_time"] = max(0.005, min(1.0, bounce))
     button["reboot_hold_seconds"] = hold
+    button["combo_hold_seconds"] = combo
 
     return Config(data, path)
 

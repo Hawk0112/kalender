@@ -327,8 +327,15 @@ Reihen vertauscht; zählt gar nichts, das Ende der Leiste.
 | Taster | Wirkung |
 |---|---|
 | **1** (Pin 11) | kurz: Alarmton beenden – läutet nichts: zurück auf die aktuelle Woche. **20 s halten: Neustart** |
-| **2** (Pin 13) | eine Woche vorwärts |
-| **3** (Pin 15) | eine Woche zurück |
+| **2** (Pin 13) | eine Woche vorwärts, Halten wiederholt |
+| **3** (Pin 15) | eine Woche zurück, Halten wiederholt |
+| **2 + 3 zugleich, 2 s** | Einstellungen öffnen und wieder schließen |
+
+Im Einstellungsdialog wandern Taster 2 und 3 von einem Bedienelement zum
+nächsten, Taster 1 aktiviert es. Bei Textfeldern erscheint eine
+Bildschirmtastatur. Der Kalender lässt sich damit vollständig ohne Maus und
+Tastatur bedienen — Einzelheiten in [README.md](README.md) unter „Einstellungen
+ohne Tastatur bedienen".
 
 Wurde geblättert und danach fünf Minuten lang kein Taster mehr gedrückt,
 springt die Anzeige von selbst auf die aktuelle Woche zurück. Die Frist stellst
