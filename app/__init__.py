@@ -1,3 +1,5 @@
-"""Kalenderanzeige fuer Raspberry Pi 5."""
+"""Kalenderanzeige fuer Raspberry Pi."""
 
-__version__ = "1.1.0"
+# Passt zur Marke v1.0.0 im Repository. Bei groesseren Aenderungen hochzaehlen
+# und eine neue Marke setzen - dann laesst sich jederzeit dorthin zurueck.
+__version__ = "1.0.0"
