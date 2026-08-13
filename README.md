@@ -19,6 +19,7 @@ beim Einschalten des Raspberry automatisch im Vollbild.
 | `app/buzzer.py` | Piezo-Summer am GPIO, erzeugt die Alarmtöne per PWM |
 | `app/alarm_runner.py` | löst den Summer aus, wenn eine Erinnerung fällig wird |
 | `app/updater.py` | holt neue Programmstände, prüft sie und startet neu |
+| `app/setup_mode.py` | Einrichtung per Handy: QR-Code, Kennung, Zugang auf Zeit |
 | `kiosk/start-kiosk.sh` | startet Chromium im Kiosk-Modus, startet ihn bei Absturz neu |
 | `kiosk/stop-kiosk.sh` | beendet die Vollbildanzeige, um am Desktop zu arbeiten |
 | `systemd/` | Vorlage für den Dienst `kalender.service` |
@@ -342,6 +343,43 @@ ein **Häkchen** umgeschaltet. Bei **Auswahl- und Zahlenfeldern** schaltet
 Taster 1 in einen Änderungsmodus — die Umrandung wechselt dann von Blau auf
 gestricheltes Gelb, Taster 2 und 3 verstellen den Wert, ein weiterer Druck auf
 Taster 1 übernimmt ihn.
+
+### Einrichtung per Handy (QR-Code)
+
+Der bequemste Weg, eine lange Kalenderadresse einzugeben — ganz ohne Maus,
+Tastatur und SSH:
+
+1. Am Kalender die Einstellungen öffnen (Taster 2 und 3 zehn Sekunden), dort
+   zum Abschnitt **Einrichtung per Handy** und **QR-Code anzeigen** wählen.
+2. Der Kalender zeigt bildschirmfüllend einen QR-Code, seine Netzwerkadresse
+   und eine sechsstellige Zahl.
+3. Mit der Handykamera auf den QR-Code halten und den Vorschlag öffnen. Das
+   Handy zeigt daraufhin dieselbe Einstellungsseite — dort lässt sich die
+   Adresse bequem eintippen oder aus dem Kalenderdienst **einfügen**.
+4. Fertig. Eine beliebige Taste am Gerät beendet die Einrichtung.
+
+Ohne Kamera geht es genauso: im Browser des Handys die angezeigte Adresse
+öffnen und die sechsstellige Zahl eingeben.
+
+**Was dabei abgesichert ist.** Der Dienst nimmt Anfragen aus dem Heimnetz
+grundsätzlich entgegen, beantwortet sie aber nur, solange die Einrichtung läuft
+**und** die Kennung stimmt — sonst kommt eine Absage. Die Kennung steht
+ausschließlich auf dem Bildschirm, wird bei jedem Start neu gewürfelt und
+verfällt nach 15 Minuten. Vom Gerät selbst ist wie bisher alles erreichbar. Die
+Kalenderadressen verlassen dabei nie das Heimnetz.
+
+Zwei Werte in `config.yaml`:
+
+```yaml
+server:
+  host: 0.0.0.0        # 127.0.0.1 sperrt ab, dann entfällt der QR-Code
+  setup_minutes: 15
+```
+
+> **Bei einer bestehenden Installation** steht dort noch `host: 127.0.0.1`.
+> Die Einstellung wird beim Aktualisieren bewusst nicht überschrieben; der
+> Knopf meldet dann, was zu tun ist. Trage `0.0.0.0` ein und starte den Dienst
+> neu.
 
 ### Die Bildschirmtastatur
 

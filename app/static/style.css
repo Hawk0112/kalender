@@ -519,6 +519,42 @@ html, body {
   opacity: 0.85;
 }
 
+/* ---------- Einrichtung per Handy ---------- */
+.setup-overlay .setup-card {
+  animation: none;                 /* hier soll nichts pulsieren */
+  gap: 2vmin;
+  background: color-mix(in srgb, var(--today) 12%, var(--alarm-base));
+  border-color: var(--today);
+}
+.setup-title { font-size: clamp(1.1rem, 3vmin, 2.2rem); font-weight: 600; }
+
+.setup-qr {
+  background: #ffffff;             /* QR-Codes brauchen hellen Grund */
+  padding: 1.5vmin;
+  border-radius: 0.6vmin;
+  line-height: 0;
+}
+.setup-qr svg {
+  width: min(38vh, 38vw);
+  height: min(38vh, 38vw);
+  shape-rendering: crispEdges;
+}
+
+.setup-text { text-align: center; }
+.setup-step { font-size: clamp(0.9rem, 2.4vmin, 1.9rem); }
+.setup-alt {
+  font-size: clamp(0.75rem, 1.7vmin, 1.2rem);
+  color: var(--fg-dim);
+  margin-top: 1.2vmin;
+}
+.setup-code {
+  font-size: clamp(1.4rem, 5vmin, 4rem);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.6vmin;
+}
+
 /* ---------- Zahnrad ---------- */
 .gear {
   background: none;

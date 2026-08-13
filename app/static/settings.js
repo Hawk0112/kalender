@@ -346,6 +346,26 @@ function buildForm(data) {
   const interval = numberInput(data.refresh.interval_minutes, 1, 1440);
   const timeout = numberInput(data.refresh.timeout_seconds, 5, 120);
 
+  // Einrichtung per Handy
+  const setupResult = h("span", { class: "test-result" });
+  const setupButton = h("button", {
+    type: "button", class: "ghost", text: "QR-Code anzeigen",
+    onclick: async (event) => {
+      const knopf = event.currentTarget;
+      knopf.disabled = true;
+      setupResult.className = "test-result";
+      setupResult.textContent = "wird geöffnet…";
+      const ergebnis = await setupStart();
+      knopf.disabled = false;
+      if (ergebnis.ok) {
+        closeSettings();     // der QR-Code soll frei stehen
+      } else {
+        setupResult.classList.add("bad");
+        setupResult.textContent = ergebnis.error || "nicht möglich";
+      }
+    },
+  });
+
   // Programmstand
   const updateResult = h("div", { class: "test-result" });
   const updateButton = h("button", {
@@ -421,6 +441,9 @@ function buildForm(data) {
         field("Aktualisierung alle … Min.", interval),
         field("Zeitlimit je Abruf (Sek.)", timeout)),
       zoneList),
+    section("Einrichtung per Handy",
+      `Zeigt einen QR-Code auf dem Kalender. Wer ihn mit der Handykamera scannt, landet auf dieser Seite und kann Kalenderadressen bequem eintippen oder einfügen. Der Zugang gilt ${Math.round(data.setup_minutes || 15)} Minuten und nur im selben Netz.`,
+      h("div", { class: "row-actions" }, setupButton, setupResult)),
     section("Programmstand",
       `Läuft gerade: ${current?.version || "unbekannt"}. Der Knopf holt einen neuen Stand aus dem Repository, prüft ihn und startet das Gerät danach neu. Läuft der neue Stand nicht, wird der bisherige wiederhergestellt und nicht neu gestartet.`,
       h("div", { class: "row-actions" }, updateButton, updateResult)),

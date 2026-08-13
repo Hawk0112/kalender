@@ -12,8 +12,14 @@ timezone: Europe/Vienna
 locale: de-AT
 
 server:
-  host: 127.0.0.1
+  # 0.0.0.0 laesst Anfragen aus dem Heimnetz zu. Beantwortet werden sie nur,
+  # solange die Einrichtung per Handy laeuft und die Kennung vom Bildschirm
+  # stimmt - sonst kommt eine Absage. 127.0.0.1 sperrt das Geraet vollstaendig
+  # ab, dann entfaellt der QR-Code.
+  host: 0.0.0.0
   port: 8080
+  # So lange bleibt die Einrichtung per Handy nach dem Start geoeffnet.
+  setup_minutes: 15
 
 refresh:
   # Wie oft die Kalender aus dem Internet geholt werden

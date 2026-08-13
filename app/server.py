@@ -12,7 +12,7 @@ from pathlib import Path
 
 from . import __version__
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, make_response, redirect, request, send_from_directory
 
 from .config import (
     Config,
@@ -27,8 +27,13 @@ from .button import ButtonWatcher
 from .buzzer import Buzzer
 from .events import build_days, collect_alarms, expand, parse_calendar
 from .sources import SourceFetcher
+from .setup_mode import SetupMode
 from .store import CalendarStore
 from .updater import UpdateError, Updater
+
+# Anfragen vom Geraet selbst gelten immer als berechtigt.
+LOCAL_ADDRESSES = {"127.0.0.1", "::1", "localhost"}
+SETUP_COOKIE = "kalender_setup"
 
 log = logging.getLogger("kalender")
 
@@ -71,6 +76,11 @@ class AppContext:
         self.alarms: AlarmRunner | None = None
         # Das Repository liegt eine Ebene ueber dem Paket.
         self.updater = Updater(Path(__file__).resolve().parent.parent)
+        self.setup = SetupMode(
+            minutes=float(config.server.get("setup_minutes", 15)),
+            port=int(config.server["port"]),
+            host=str(config.server.get("host", "0.0.0.0")),
+        )
 
     def reload(self, config: Config) -> None:
         self.config = config
@@ -85,6 +95,32 @@ def create_app(ctx: AppContext) -> Flask:
     def no_cache(response):
         response.headers["Cache-Control"] = "no-store, max-age=0"
         return response
+
+    def vom_geraet() -> bool:
+        return (request.remote_addr or "") in LOCAL_ADDRESSES
+
+    def berechtigt() -> bool:
+        """Aus dem Netz nur waehrend der Einrichtung und mit gueltiger Kennung."""
+        if not ctx.setup.active:
+            return False
+        mitgebracht = request.cookies.get(SETUP_COOKIE) or request.args.get("t", "")
+        return ctx.setup.token_ok(mitgebracht)
+
+    @app.before_request
+    def zugang_pruefen():
+        # Das Geraet selbst und der Einstiegspunkt bleiben immer erreichbar.
+        if vom_geraet() or request.path == "/setup" or berechtigt():
+            return None
+        return (
+            "<!doctype html><meta charset='utf-8'>"
+            "<title>Kalender</title>"
+            "<body style='font-family:system-ui;padding:2rem;line-height:1.5'>"
+            "<h1>Kalender</h1>"
+            "<p>Die Einstellungen sind nur waehrend der Einrichtung erreichbar.</p>"
+            "<p>Halte am Geraet die beiden rechten Taster zehn Sekunden lang "
+            "gedrueckt und oeffne dann den angezeigten QR-Code.</p></body>",
+            403,
+        )
 
     @app.get("/")
     def index():
@@ -259,6 +295,68 @@ def create_app(ctx: AppContext) -> Flask:
             return jsonify({"ok": False, "error": "Summer antwortet nicht"})
         return jsonify({"ok": True})
 
+    # -- Einrichtung per Handy -------------------------------------------
+    def setup_seite(meldung: str = "") -> str:
+        """Kleine, in sich geschlossene Seite - sie braucht keine Zusatzdateien,
+        weil die ohne gueltige Kennung gar nicht ausgeliefert wuerden."""
+        hinweis = (
+            f"<p style='color:#b3341c'>{meldung}</p>" if meldung else ""
+        )
+        return (
+            "<!doctype html><meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+            "<title>Kalender einrichten</title>"
+            "<body style='font-family:system-ui;max-width:24rem;margin:0 auto;"
+            "padding:2rem 1.2rem;line-height:1.5'>"
+            "<h1 style='font-size:1.4rem'>Kalender einrichten</h1>"
+            f"{hinweis}"
+            "<p>Gib die sechsstellige Zahl ein, die auf dem Kalender steht.</p>"
+            "<form method='get' action='/setup'>"
+            "<input name='code' inputmode='numeric' autocomplete='off' "
+            "style='font-size:1.6rem;width:100%;padding:0.6rem;text-align:center;"
+            "letter-spacing:0.3em;border:1px solid #999;border-radius:0.4rem'>"
+            "<button style='margin-top:1rem;width:100%;padding:0.8rem;"
+            "font-size:1.1rem;border:0;border-radius:0.4rem;background:#1f6fd0;"
+            "color:#fff'>Weiter</button></form></body>"
+        )
+
+    @app.get("/setup")
+    def setup_einstieg():
+        """Ziel des QR-Codes. Bei gueltiger Kennung geht es zur Anzeige."""
+        if not ctx.setup.active:
+            return setup_seite("Die Einrichtung ist gerade nicht geöffnet."), 403
+
+        token = request.args.get("t", "")
+        code = request.args.get("code", "")
+        if not (ctx.setup.token_ok(token) or ctx.setup.code_ok(code)):
+            meldung = "Die Zahl stimmt nicht." if code else ""
+            return setup_seite(meldung), 403 if code else 200
+
+        antwort = make_response(redirect("/?setup=1"))
+        antwort.set_cookie(
+            SETUP_COOKIE, ctx.setup.token(),
+            max_age=ctx.setup.remaining(), httponly=True, samesite="Lax",
+        )
+        return antwort
+
+    @app.get("/api/setup")
+    def api_setup_status():
+        return jsonify(ctx.setup.info())
+
+    @app.post("/api/setup")
+    def api_setup_start():
+        if not vom_geraet():
+            return jsonify({"ok": False, "error": "nur am Gerät möglich"}), 403
+        erreichbar, grund = ctx.setup.reachable()
+        if not erreichbar:
+            return jsonify({"ok": False, "error": grund}), 400
+        return jsonify({"ok": True, **ctx.setup.start()})
+
+    @app.delete("/api/setup")
+    def api_setup_stop():
+        ctx.setup.stop()
+        return jsonify({"ok": True})
+
     # -- Programmstand ---------------------------------------------------
     @app.get("/api/update")
     def api_update_check():
@@ -391,7 +489,14 @@ def main(argv: list[str] | None = None) -> int:
             buzzer.error,
         )
 
+    host = args.host or config.server["host"]
+    port = args.port or int(config.server["port"])
+
     ctx = AppContext(config, store, button, buzzer)
+    # Der Einrichtungsmodus muss wissen, worauf tatsaechlich gelauscht wird -
+    # die Befehlszeile kann die Konfiguration ueberschreiben.
+    ctx.setup.host = host
+    ctx.setup.port = port
     ctx.alarms = AlarmRunner(ctx, buzzer)
     button.add_listener(ctx.alarms.on_button)
     ctx.alarms.start()
@@ -411,8 +516,6 @@ def main(argv: list[str] | None = None) -> int:
             pass
 
     app = create_app(ctx)
-    host = args.host or config.server["host"]
-    port = args.port or int(config.server["port"])
     log.info("Kalender laeuft auf http://%s:%s (Zeitzone %s)", host, port, config.tz)
     app.run(host=host, port=port, threaded=True, use_reloader=False)
     return 0

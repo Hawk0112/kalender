@@ -35,6 +35,21 @@
     <div id="splash" class="splash">Kalender wird geladen…</div>
   </div>
 
+  <div id="setupOverlay" class="alarm-overlay setup-overlay" hidden>
+    <div class="alarm-card setup-card">
+      <h2 class="setup-title">Einrichtung per Handy</h2>
+      <div id="setupQr" class="setup-qr"></div>
+      <div class="setup-text">
+        <p class="setup-step">Mit der Handykamera auf das Muster halten.</p>
+        <p class="setup-alt">
+          Oder im Browser <b id="setupAddress"></b> öffnen und diese Zahl eingeben:
+        </p>
+        <div id="setupCode" class="setup-code"></div>
+      </div>
+      <div id="setupFoot" class="alarm-hint"></div>
+    </div>
+  </div>
+
   <!-- Ausserhalb von #screen, damit die Nachtabsenkung den Alarm nicht mit
        abdunkelt - er soll auch um drei Uhr frueh voll sichtbar sein. -->
   <div id="alarmBanner" class="alarm-overlay" hidden>
@@ -77,6 +92,7 @@
   <script src="/static/app.js"></script>
   <script src="/static/alarm.js"></script>
   <script src="/static/settings.js"></script>
+  <script src="/static/setup.js"></script>
   <script src="/static/navigate.js"></script>
   <script src="/static/buttons.js"></script>
 </body>

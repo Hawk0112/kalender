@@ -240,7 +240,14 @@ Es muss `active (running)` dastehen. Mit `q` verlässt du die Anzeige.
 
 ## Schritt 7 – Kalender eintragen
 
-Am schnellsten geht es am Bildschirm. Öffne Chromium über das Startmenü und
+**Ohne Maus und Tastatur — der bequemste Weg:** Öffne am Kalender die
+Einstellungen (Taster 2 und 3 zehn Sekunden), wähle im Abschnitt *Einrichtung
+per Handy* den Knopf **QR-Code anzeigen** und halte die Handykamera darauf. Auf
+dem Handy erscheint dieselbe Einstellungsseite, und du kannst die
+Kalenderadresse dort eintippen oder direkt aus dem Kalenderdienst einfügen.
+Einzelheiten in [README.md](README.md) unter „Einrichtung per Handy".
+
+Am schnellsten geht es sonst am Bildschirm. Öffne Chromium über das Startmenü und
 rufe `http://localhost:8080` auf – der Vollbildmodus startet erst nach dem
 nächsten Neustart, im normalen Fenster geht es jetzt bequemer. Klicke oben
 rechts auf das **Zahnrad** und trage unter *Kalender* Name, ICS-Adresse und

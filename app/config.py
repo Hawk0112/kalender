@@ -13,7 +13,10 @@ import yaml
 DEFAULTS: dict[str, Any] = {
     "timezone": "Europe/Vienna",
     "locale": "de-AT",
-    "server": {"host": "127.0.0.1", "port": 8080},
+    # 0.0.0.0 laesst Anfragen aus dem Heimnetz zu - sie werden aber nur
+    # beantwortet, solange die Einrichtung laeuft und die Kennung stimmt.
+    # 127.0.0.1 sperrt das Geraet vollstaendig ab, dann entfaellt der QR-Code.
+    "server": {"host": "0.0.0.0", "port": 8080, "setup_minutes": 15},
     "refresh": {
         "interval_minutes": 15,
         "retry_minutes": 2,
@@ -418,6 +421,7 @@ def editable_settings(config: Config) -> dict[str, Any]:
         "sounds": SOUNDS,
         "outputs": OUTPUTS,
         "themes": THEMES,
+        "setup_minutes": float(config.server.get("setup_minutes", 15)),
         "alarm_hard_limit_seconds": ALARM_HARD_LIMIT_SECONDS,
         "calendars": [
             {
