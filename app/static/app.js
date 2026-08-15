@@ -576,6 +576,26 @@ window.addEventListener("resize", () => {
   if (current) render(current);
 });
 
+/* ---------- Mauszeiger ---------- */
+
+// Am Kalender hängt normalerweise keine Maus. Wird doch eine benutzt, soll der
+// Zeiger sichtbar sein - und wieder verschwinden, sobald sie stillsteht.
+const POINTER_HIDE_MS = 3000;
+let pointerTimer = null;
+
+function pointerSeen() {
+  document.body.classList.add("pointer-visible");
+  clearTimeout(pointerTimer);
+  pointerTimer = setTimeout(
+    () => document.body.classList.remove("pointer-visible"),
+    POINTER_HIDE_MS,
+  );
+}
+
+for (const typ of ["mousemove", "mousedown", "wheel"]) {
+  document.addEventListener(typ, pointerSeen, { passive: true });
+}
+
 poll();
 setInterval(poll, POLL_MS);
 setInterval(heartbeat, 10_000);

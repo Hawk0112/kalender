@@ -686,7 +686,9 @@ verlassen: Das **Zahnrad** oben rechts (oder die Taste `E`) genügt.
 
 ## Bedienung im Ausnahmefall
 
-Im Normalbetrieb wird nichts bedient. Wenn Maus oder Tastatur angesteckt sind:
+Im Normalbetrieb wird nichts bedient. Der **Mauszeiger ist deshalb unsichtbar**
+— er erscheint, sobald die Maus bewegt wird, und verschwindet nach drei
+Sekunden Stillstand wieder. Wenn Maus oder Tastatur angesteckt sind:
 
 * **Zahnrad oben rechts** oder Taste `E` öffnet die Einstellungen, `Esc` schließt.
 * Während ein Alarm läutet, beendet ihn jede Taste; sie löst dabei nichts

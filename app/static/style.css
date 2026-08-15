@@ -103,6 +103,12 @@ html, body {
   cursor: none;
 }
 
+/* Der Mauszeiger erscheint beim Bewegen und verschwindet wieder, sobald die
+   Maus stillsteht. Das !important ueberstimmt die cursor:pointer-Regeln der
+   Knoepfe - sonst blieben sie sichtbar. */
+body.pointer-visible { cursor: auto; }
+body:not(.pointer-visible) * { cursor: none !important; }
+
 #screen {
   display: flex;
   flex-direction: column;
@@ -593,7 +599,6 @@ html, body {
 .gear svg { width: 1.5rem; height: 1.5rem; fill: currentColor; }
 .gear:hover, .gear:focus-visible { color: var(--fg); background: var(--panel-2); outline: none; }
 
-body.settings-open { cursor: auto; }
 body.settings-open .gear { color: var(--fg); }
 
 /* ---------- Einstellungsdialog ---------- */
@@ -607,7 +612,6 @@ body.settings-open .gear { color: var(--fg); }
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  cursor: auto;
 }
 .overlay[hidden] { display: none; }
 
