@@ -186,7 +186,20 @@ Erinnerungen abgeschaltet sind, sonst unauffällig grau. So fällt beim nächste
 Blick auf, wenn der Schalter versehentlich umgelegt wurde — bei einem Gerät,
 das erinnern soll, wäre das sonst unbemerkt geblieben.
 
-Ob eine Quelle überhaupt Erinnerungen mitliefert, lässt sich nachsehen:
+Welche Termine eine Erinnerung mitbringen — und was sie von den übrigen
+unterscheidet — zeigt dieses Werkzeug:
+
+```bash
+cd ~/kalender && .venv/bin/python tools/erinnerungen.py
+```
+
+Es stellt die Termine mit Erinnerung denen ohne gegenüber und zeigt zu jedem
+die verräterischen Eigenschaften: `ORGANIZER` und `ATTENDEE` deuten auf eine
+Einladung von jemand anderem hin, `X-`Eigenschaften auf einen Import aus einem
+anderen Programm. Beides erklärt, warum Google dort eine Erinnerung mitliefert,
+bei selbst angelegten Terminen aber nicht.
+
+Ob eine Quelle überhaupt Erinnerungen mitliefert, lässt sich auch kurz prüfen:
 
 ```bash
 cd ~/kalender && .venv/bin/python -c "
