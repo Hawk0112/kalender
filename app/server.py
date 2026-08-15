@@ -242,6 +242,56 @@ def create_app(ctx: AppContext) -> Flask:
             }
         )
 
+    @app.get("/api/event")
+    def api_event():
+        """Alles, was ueber einen Termin bekannt ist - fuer die Fehlersuche.
+
+        Wird erst beim Anklicken geholt, damit die Wochenansicht nicht bei
+        jedem Abruf die Rohdaten aller Termine mitschleppt.
+        """
+        kennung = request.args.get("id", "")
+        # Die Kennung endet auf "@JJJJ-MM-TT" fuer den Tagesabschnitt; die UID
+        # davor darf selbst ein @ enthalten.
+        gesucht = kennung.rsplit("@", 1)[0] if "@" in kennung else kennung
+        if not gesucht:
+            return jsonify({"ok": False, "error": "keine Kennung angegeben"}), 400
+
+        config = ctx.config
+        sources = {source["id"]: source for source in config.calendars}
+        now = datetime.now(config.tz)
+        start = datetime.combine(now.date(), time.min, tzinfo=config.tz) - timedelta(days=380)
+        ende = start + timedelta(days=760)
+
+        for state in store.snapshot().sources:
+            quelle = sources.get(state.id)
+            if state.calendar is None or quelle is None:
+                continue
+            if not gesucht.startswith(quelle["id"] + ":"):
+                continue
+            for termin in expand(
+                state.calendar, quelle, start, ende, config.tz,
+                config.highlights, with_raw=True,
+            ):
+                if termin["id"] != gesucht:
+                    continue
+                return jsonify({
+                    "ok": True,
+                    "id": termin["id"],
+                    "title": termin["title"],
+                    "location": termin["location"],
+                    "calendar": termin["calendar"],
+                    "color": termin["color"],
+                    "source_color": termin["source_color"],
+                    "highlight": termin["highlight"],
+                    "icon": termin["icon"],
+                    "all_day": termin["all_day"],
+                    "start": termin["start"].isoformat(),
+                    "end": termin["end"].isoformat(),
+                    "alarms": [a.isoformat() for a in termin["alarms"]],
+                    "raw": termin["raw"],
+                })
+        return jsonify({"ok": False, "error": "Termin nicht gefunden"}), 404
+
     # -- Taster ----------------------------------------------------------
     @app.get("/api/button")
     def api_button():

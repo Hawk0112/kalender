@@ -20,6 +20,7 @@ beim Einschalten des Raspberry automatisch im Vollbild.
 | `app/alarm_runner.py` | löst den Summer aus, wenn eine Erinnerung fällig wird |
 | `app/updater.py` | holt neue Programmstände, prüft sie und startet neu |
 | `app/setup_mode.py` | Einrichtung per Handy: QR-Code, Kennung, Zugang auf Zeit |
+| `app/static/details.js` | Termindetails zur Fehlersuche (Mausklick auf einen Termin) |
 | `kiosk/start-kiosk.sh` | startet Chromium im Kiosk-Modus, startet ihn bei Absturz neu |
 | `kiosk/stop-kiosk.sh` | beendet die Vollbildanzeige, um am Desktop zu arbeiten |
 | `systemd/` | Vorlage für den Dienst `kalender.service` |
@@ -504,6 +505,28 @@ erkannten Taster eine Zeile wie `Taster 'forward' aktiv an GPIO27`
 protokolliert. Kommt dort eine Meldung über fehlende Rechte, gehört der
 Benutzer in die Gruppe `gpio` (`sudo usermod -aG gpio $USER`, danach neu
 starten).
+
+## Termindetails ansehen (Fehlersuche)
+
+Ein **Mausklick auf einen Termin** — im Stundenraster, in der Ganztagszeile,
+in den Sammelzeilen oder in der Terminliste — öffnet ein Fenster mit allem,
+was über ihn bekannt ist:
+
+* **So zeigt der Kalender ihn an** — Titel, Kalender, Beginn und Ende (lesbar
+  und als Zeitstempel), ganztägig ja/nein, Ort, verwendete Farbe, Farbe des
+  Kalenders, angewandte Hervorhebung
+* **Erinnerungen** — jeder Zeitpunkt mit Vorlauf in Minuten. Bringt der Termin
+  keine mit, steht dort ausdrücklich „Dieser Termin bringt keine Erinnerung
+  mit (VALARM fehlt)"
+* **Rohdaten aus dem Kalender** — sämtliche Eigenschaften unverändert, samt
+  Parametern wie `TZID`, dazu Unterabschnitte wie `VALARM`
+
+Damit lässt sich unmittelbar sehen, was der Anbieter tatsächlich liefert — etwa
+ob eine Erinnerung überhaupt ankommt oder ob eine Farbe mitgeschickt wurde.
+Geschlossen wird mit `Esc`, dem Kreuz oder einem Klick daneben.
+
+Das Fenster ist bewusst nur mit der Maus erreichbar; für die Bedienung mit den
+drei Tastern hat es keinen Nutzen.
 
 ## Farbe eines einzelnen Termins
 

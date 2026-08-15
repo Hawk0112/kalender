@@ -229,6 +229,7 @@ function buildEdge(day, entries, kind) {
     const chip = document.createElement("div");
     chip.className = "chip time" + (event.past ? " past" : "") + (event.highlight ? " highlight" : "");
     chip.style.setProperty("--c", event.color);
+    chip.dataset.eventId = event.id;
     chip.title = `${hhmm(event.start)}–${hhmm(event.end)} ${event.title}`;
 
     const time = document.createElement("span");
@@ -260,6 +261,7 @@ function buildAllDay(day, rowsNeeded) {
     const chip = document.createElement("div");
     chip.className = "chip" + (event.past ? " past" : "") + (event.highlight ? " highlight" : "");
     chip.style.setProperty("--c", event.color);
+    chip.dataset.eventId = event.id;
     chip.title = event.title;
     const arrowLeft = event.continues_before ? "‹ " : "";
     const arrowRight = event.continues_after ? " ›" : "";
@@ -340,6 +342,7 @@ function buildEvent(item, range, total) {
   if (item.end > offset + total) node.classList.add("cut-bottom");
   if (visibleEnd - visibleStart <= 45) node.classList.add("short");
   node.style.setProperty("--c", event.color);
+  node.dataset.eventId = event.id;
   node.style.top = `${Math.max(0, top)}%`;
   node.style.height = `${Math.max(0.8, Math.min(100 - Math.max(0, top), height))}%`;
   node.style.left = `calc(${item.column * width}% + 2px)`;
@@ -387,6 +390,7 @@ function buildAgenda(day) {
     const item = document.createElement("div");
     item.className = "item" + (event.past ? " past" : "") + (event.highlight ? " highlight" : "");
     item.style.setProperty("--c", event.color);
+    item.dataset.eventId = event.id;
     const time = document.createElement("div");
     time.className = "etime";
     time.textContent = event.all_day ? "ganztags" : `${hhmm(event.start)}–${hhmm(event.end)}`;

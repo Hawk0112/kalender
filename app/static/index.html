@@ -41,6 +41,16 @@
     <div id="splash" class="splash">Kalender wird geladen…</div>
   </div>
 
+  <div id="details" class="overlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+      <div class="dialog-head">
+        <h2 id="detailsTitle">Termin</h2>
+        <button id="detailsClose" class="ghost" type="button" title="Schließen (Esc)">✕</button>
+      </div>
+      <div id="detailsBody" class="dialog-body"></div>
+    </div>
+  </div>
+
   <div id="setupOverlay" class="alarm-overlay setup-overlay" hidden>
     <div class="alarm-card setup-card">
       <h2 class="setup-title">Einrichtung per Handy</h2>
@@ -98,6 +108,7 @@
   <script src="/static/app.js"></script>
   <script src="/static/alarm.js"></script>
   <script src="/static/settings.js"></script>
+  <script src="/static/details.js"></script>
   <script src="/static/setup.js"></script>
   <script src="/static/navigate.js"></script>
   <script src="/static/buttons.js"></script>

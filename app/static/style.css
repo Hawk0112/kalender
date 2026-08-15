@@ -843,6 +843,39 @@ body.settings-open .gear { color: var(--fg); }
 .keypad .key.primary { background: var(--today); border-color: var(--today); color: var(--on-primary); font-weight: 600; }
 .keypad .key.danger { color: var(--bad-text); }
 
+/* ---------- Termindetails ---------- */
+.event, .chip, .agenda .item { cursor: pointer; }
+
+.detail-head {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--fg-dim);
+  margin: 1.1rem 0 0.4rem;
+}
+.detail-head:first-child { margin-top: 0; }
+
+.detail-row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 14rem) 1fr;
+  gap: 0.8rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+.detail-name { color: var(--fg-dim); word-break: break-word; }
+.detail-value { white-space: pre-wrap; word-break: break-word; }
+.detail-raw .detail-name,
+.detail-raw .detail-value { font-family: "DejaVu Sans Mono", monospace; font-size: 0.8rem; }
+.detail-hint .detail-value { color: var(--fg-dim); font-style: italic; }
+
+.detail-color { display: inline-flex; align-items: center; gap: 0.4rem; }
+.detail-swatch {
+  width: 0.9rem; height: 0.9rem;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+}
+
 .test-result { font-size: 0.78rem; color: var(--fg-dim); }
 .test-result.good { color: var(--good-text); }
 .test-result.bad { color: var(--bad-text); }

@@ -88,6 +88,35 @@ def event_color(component: Any) -> str:
     return value.lower() if COLOR_VALUE.match(value) else ""
 
 
+def _als_text(wert: Any) -> str:
+    try:
+        return wert.to_ical().decode("utf-8", "replace")
+    except Exception:
+        return str(wert)
+
+
+def raw_properties(component: Any) -> dict[str, Any]:
+    """Alles, was im Termin steht - unveraendert, fuer die Fehlersuche."""
+    eigenschaften = []
+    for name, wert in component.items():
+        eintrag: dict[str, Any] = {"name": str(name), "wert": _als_text(wert)}
+        params = {str(k): str(v) for k, v in (getattr(wert, "params", {}) or {}).items()}
+        if params:
+            eintrag["parameter"] = params
+        eigenschaften.append(eintrag)
+    eigenschaften.sort(key=lambda e: e["name"])
+
+    unter = []
+    for sub in getattr(component, "subcomponents", []):
+        unter.append({
+            "art": str(getattr(sub, "name", "?")),
+            "eigenschaften": [
+                {"name": str(k), "wert": _als_text(v)} for k, v in sub.items()
+            ],
+        })
+    return {"eigenschaften": eigenschaften, "unterkomponenten": unter}
+
+
 def match_highlight(title: str, source: dict, highlights: list[dict]) -> dict | None:
     """Erste passende Hervorhebungsregel finden (Titel-Stichwort oder Kalendername)."""
     haystack = title.lower()
@@ -107,6 +136,7 @@ def expand(
     window_end: datetime,
     tz: tzinfo,
     highlights: list[dict] | None = None,
+    with_raw: bool = False,
 ) -> list[dict[str, Any]]:
     """Termine einer Quelle im Fenster expandieren (inkl. Serienterminen)."""
     try:
@@ -139,21 +169,23 @@ def expand(
             colour = event_color(component) or source["color"]
 
         uid = _text(component, "UID") or title
-        events.append(
-            {
-                "id": f"{source['id']}:{uid}:{start.isoformat()}",
-                "title": title,
-                "location": _text(component, "LOCATION"),
-                "calendar": source["name"],
-                "color": colour,
-                "icon": rule["icon"] if rule else "",
-                "highlight": rule["name"] if rule else None,
-                "all_day": all_day,
-                "start": start,
-                "end": end,
-                "alarms": alarm_times(component, start, end, tz),
-            }
-        )
+        eintrag: dict[str, Any] = {
+            "id": f"{source['id']}:{uid}:{start.isoformat()}",
+            "title": title,
+            "location": _text(component, "LOCATION"),
+            "calendar": source["name"],
+            "color": colour,
+            "icon": rule["icon"] if rule else "",
+            "highlight": rule["name"] if rule else None,
+            "all_day": all_day,
+            "start": start,
+            "end": end,
+            "alarms": alarm_times(component, start, end, tz),
+        }
+        if with_raw:
+            eintrag["raw"] = raw_properties(component)
+            eintrag["source_color"] = source["color"]
+        events.append(eintrag)
     return events
 
 
