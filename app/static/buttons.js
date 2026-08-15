@@ -72,6 +72,26 @@ async function buttonLoop() {
   }
 }
 
+/* Mausrad blättert wie die Taster 2 und 3: nach unten eine Woche vorwärts,
+   nach oben eine zurück. */
+let radZuletzt = 0;
+
+function radBelegt() {
+  return !settingsEl.overlay.hidden
+    || !document.getElementById("details").hidden
+    || !document.getElementById("setupOverlay").hidden
+    || alarmIsRinging();
+}
+
+document.addEventListener("wheel", (event) => {
+  if (radBelegt() || Math.abs(event.deltaY) < 1) return;
+  // Ein Radstoss loest viele Ereignisse aus - sonst springt es um Monate.
+  const jetzt = Date.now();
+  if (jetzt - radZuletzt < 220) return;
+  radZuletzt = jetzt;
+  shiftWeeks(event.deltaY > 0 ? 1 : -1);
+}, { passive: true });
+
 /* Dieselben Befehle über die Tastatur, falls einmal eine angesteckt ist. */
 document.addEventListener("keydown", (event) => {
   if (Date.now() - (window.__alarmStoppedAt || 0) < 1000) return;

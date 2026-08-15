@@ -352,7 +352,10 @@ setzt die Frist neu. Einstellbar im Zahnrad unter *Anzeige* → „Zurück auf h
 nach … Min."; `0` lässt die Ansicht stehen.
 
 Ist eine Tastatur angesteckt, tun die Pfeiltasten `←` und `→` dasselbe, `Pos1`
-springt auf heute.
+springt auf heute. Mit einer Maus blättert das **Mausrad**: nach unten eine
+Woche vorwärts, nach oben eine zurück. Ein Radstoß zählt dabei als ein Schritt,
+und solange ein Dialog offen ist oder ein Alarm läutet, bleibt das Rad
+wirkungslos.
 
 ### Einstellungen ohne Tastatur bedienen
 

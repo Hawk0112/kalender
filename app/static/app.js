@@ -57,8 +57,12 @@ function dateFromISODate(value) {
 /* ---------- Datenabruf ---------- */
 
 async function poll() {
+  // Welche Woche beim Absenden gewünscht war. Wird zwischenzeitlich
+  // weitergeblättert, ist die Antwort veraltet und wird verworfen - sonst
+  // hinkt die Anzeige einen Schritt hinterher.
+  const gewuenscht = weekOffset;
   try {
-    const response = await fetch(`/api/week?offset=${weekOffset * 7}`, { cache: "no-store" });
+    const response = await fetch(`/api/week?offset=${gewuenscht * 7}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     // Nach einem Update liefert der Dienst eine neue Kennung: dann die Seite
@@ -67,10 +71,9 @@ async function poll() {
       if (runningVersion === null) runningVersion = data.version;
       else if (runningVersion !== data.version) { location.reload(); return; }
     }
-    current = data;
-    // Der Dienst begrenzt die Verschiebung - danach richten.
-    weekOffset = Math.round((current.offset_days || 0) / 7);
     lastFetchOk = true;
+    if (weekOffset !== gewuenscht) return;   // überholt, nichts anzeigen
+    current = data;
   } catch (err) {
     lastFetchOk = false;
     console.warn("Abruf fehlgeschlagen:", err);
