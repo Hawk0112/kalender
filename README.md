@@ -180,6 +180,30 @@ Termins sowie feste Zeitpunkte.
 diese zum Terminbeginn melden, schaltet „Auch bei Terminbeginn" ein; ganztägige
 Termine sind davon ausgenommen, sonst klingelte es um Mitternacht.
 
+Neben der Uhr steht eine **Glocke**: durchgestrichen und gelb, solange die
+Erinnerungen abgeschaltet sind, sonst unauffällig grau. So fällt beim nächsten
+Blick auf, wenn der Schalter versehentlich umgelegt wurde — bei einem Gerät,
+das erinnern soll, wäre das sonst unbemerkt geblieben.
+
+Ob eine Quelle überhaupt Erinnerungen mitliefert, lässt sich nachsehen:
+
+```bash
+cd ~/kalender && .venv/bin/python -c "
+from app.config import load_config
+from app.sources import SourceFetcher
+from pathlib import Path
+import tempfile
+c = load_config('config.yaml'); f = SourceFetcher(Path(tempfile.mkdtemp()), timeout=25)
+print('Alarm aktiv:', c.alarm['enabled'], '| bei Terminbeginn:', c.alarm['at_event_start'])
+for q in c.calendars:
+    t = f.fetch(q).text or ''
+    print(f\"  {q['name']:20} {t.count('BEGIN:VEVENT'):4} Termine, {t.count('BEGIN:VALARM'):4} Erinnerungen\")
+"
+```
+
+Google liefert Erinnerungen nur mit, wenn sie am Termin ausdrücklich gesetzt
+wurden — bei der Standard-Benachrichtigung des Kalenders fehlen sie im Abo.
+
 ### Wo der Ton herauskommt
 
 Zur Wahl stehen zwei Wege, umschaltbar im Zahnrad unter *Alarm* → **Ausgabe**:

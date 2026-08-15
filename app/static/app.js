@@ -9,6 +9,7 @@ const el = {
   range: document.getElementById("rangeLabel"),
   week: document.getElementById("weekLabel"),
   offset: document.getElementById("offsetBadge"),
+  alarmState: document.getElementById("alarmState"),
   clock: document.getElementById("clock"),
   status: document.getElementById("status"),
   statusText: document.getElementById("statusText"),
@@ -130,6 +131,7 @@ function render(data) {
     buildBoard(data, locale);
   }
   updateHeader(data, locale);
+  updateAlarmState(data);
   updateStatus(data);
   updateNowLine(data);
   applyDimming(data);
@@ -472,6 +474,15 @@ function tickClock() {
   const now = nowInZone(current.timezone);
   el.clock.textContent =
     `${String(now.hour).padStart(2, "0")}:${String(now.minute).padStart(2, "0")}`;
+}
+
+/** Glocke neben der Uhr - durchgestrichen, solange keine Erinnerungen kommen. */
+function updateAlarmState(data) {
+  const an = !!(data.alarm && data.alarm.enabled);
+  el.alarmState.classList.toggle("off", !an);
+  el.alarmState.title = an
+    ? "Erinnerungen sind eingeschaltet"
+    : "Erinnerungen sind ausgeschaltet";
 }
 
 function updateStatus(data) {

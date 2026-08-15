@@ -120,19 +120,25 @@ html, body {
   justify-content: space-between;
   gap: 1rem;
 }
+.topbar-left { min-width: 0; }   /* damit lange Datumsangaben kuerzen duerfen */
 
+/* Datum und Uhrzeit sind das Wichtigste auf diesem Bildschirm - sie sind
+   deshalb gross gesetzt, der Kalender darunter nimmt den Rest. */
 #rangeLabel {
-  font-size: 1.7rem;
+  font-size: 3.4rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  line-height: 1.1;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.subtle { color: var(--fg-faint); font-size: 0.85rem; margin-top: 0.15rem; }
+.subtle { color: var(--fg-faint); font-size: 1.3rem; margin-top: 0.1rem; }
 
 .title-row { display: flex; align-items: baseline; gap: 0.7rem; }
 .offset-badge {
-  font-size: 0.82rem;
+  font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   padding: 0.15rem 0.55rem;
@@ -147,18 +153,36 @@ html, body {
 .topbar-right { display: flex; align-items: center; gap: 1.2rem; }
 
 .clock {
-  font-size: 2.1rem;
+  font-size: 4.2rem;
   font-weight: 300;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+  line-height: 1;
 }
+
+/* Glocke neben der Uhr: durchgestrichen, solange keine Erinnerungen kommen. */
+.alarm-state svg {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: block;
+}
+.alarm-state .bell { fill: var(--fg-dim); }
+.alarm-state .slash { display: none; stroke: var(--warn); }
+.alarm-state.off .bell { fill: var(--warn); opacity: 0.65; }
+.alarm-state.off .slash { display: block; }
 
 .status {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: var(--fg-faint);
+  min-width: 0;
+}
+.status #statusText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .status .dot {
   width: 0.55rem; height: 0.55rem;
