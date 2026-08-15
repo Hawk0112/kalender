@@ -7,6 +7,10 @@ erkennbar wird, was die Ausnahmen gemeinsam haben.
 Aufruf auf dem Pi:
 
     cd ~/kalender && .venv/bin/python tools/erinnerungen.py
+
+Mit --anonym werden Titel, Beschreibungen, Orte und Adressen ersetzt. Uebrig
+bleibt nur die Struktur - so laesst sich die Ausgabe weitergeben, ohne dass
+jemand die Termine mitlesen kann.
 """
 
 from __future__ import annotations
@@ -42,14 +46,33 @@ def wert(block: str, name: str) -> str:
     return treffer[0].lstrip(":").strip()[:40]
 
 
+# Diese Angaben verraten Persoenliches und werden mit --anonym ersetzt.
+PERSOENLICH = {"SUMMARY", "DESCRIPTION", "LOCATION", "ORGANIZER", "ATTENDEE", "URL"}
+
+ANONYM = False
+
+
+def maskiere(name: str, v: str) -> str:
+    """Inhalt durch eine Angabe ueber den Inhalt ersetzen."""
+    if not ANONYM or name not in PERSOENLICH or not v:
+        return v
+    if re.fullmatch(r"\d+x", v):
+        return v                       # blosse Anzahl, unbedenklich
+    return f"(vorhanden, {len(v)} Zeichen)"
+
+
 def beschreibe(block: str) -> dict[str, str]:
     daten = {}
     for name in VERRAETERISCH:
         v = wert(block, name)
         if v:
-            daten[name] = v
+            daten[name] = maskiere(name, v)
     for x in sorted(set(re.findall(r"^(X-[A-Z0-9-]+)[;:]", block, re.M))):
-        daten[x] = wert(block, x)
+        daten[x] = maskiere(x, wert(block, x))
+    # Die Herkunft steckt im Namensteil der UID, nicht im Kennungsteil davor.
+    uid = wert(block, "UID")
+    if uid:
+        daten["UID-Herkunft"] = "@" + uid.split("@")[-1] if "@" in uid else "(ohne @)"
     return daten
 
 
@@ -65,8 +88,13 @@ def zeige(titel: str, block: str, einzug: str = "    ") -> None:
 
 
 def main() -> int:
-    pfad = sys.argv[1] if len(sys.argv) > 1 else "config.yaml"
+    global ANONYM
+    argumente = [a for a in sys.argv[1:] if a != "--anonym"]
+    ANONYM = "--anonym" in sys.argv
+    pfad = argumente[0] if argumente else "config.yaml"
     cfg = load_config(pfad)
+    if ANONYM:
+        print("Anonymisierte Ausgabe - Titel, Orte und Adressen sind ersetzt.")
     holer = SourceFetcher(Path(tempfile.mkdtemp()), timeout=25)
 
     for quelle in cfg.calendars:
@@ -84,18 +112,23 @@ def main() -> int:
         print(f"{quelle['name']}: {len(bloecke)} Termine, {len(mit)} mit Erinnerung")
         print("=" * 62)
 
+        def titel_von(block: str, nummer: int) -> str:
+            if ANONYM:
+                return f"Termin {nummer}"
+            return wert(block, "SUMMARY") or "(ohne Titel)"
+
         if mit:
             print("\n  MIT Erinnerung:")
-            for block in mit[:12]:
-                zeige(wert(block, "SUMMARY") or "(ohne Titel)", block)
+            for i, block in enumerate(mit[:12], start=1):
+                zeige(titel_von(block, i), block)
                 print()
         else:
             print("\n  Kein einziger Termin bringt eine Erinnerung mit.")
 
         if ohne:
             print(f"\n  OHNE Erinnerung (zum Vergleich, {min(4, len(ohne))} Beispiele):")
-            for block in ohne[:4]:
-                zeige(wert(block, "SUMMARY") or "(ohne Titel)", block)
+            for i, block in enumerate(ohne[:4], start=1):
+                zeige(titel_von(block, i), block)
                 print()
 
     print("\nWorauf zu achten ist: Tragen die Termine mit Erinnerung ein")
