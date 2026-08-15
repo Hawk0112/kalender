@@ -313,6 +313,32 @@ function buildForm(data) {
     },
   });
 
+  // Loest eine vollstaendige Terminmeldung aus - Einblendung und Ton, mit den
+  // gerade eingestellten Werten. Das geht auch, wenn der Alarm abgeschaltet
+  // ist: der Knopf soll ja zeigen, ob die Anzeige funktioniert.
+  const probeAlarm = h("button", {
+    type: "button", class: "ghost", text: "Probealarm",
+    onclick: () => {
+      const jetzt = new Date();
+      const bis = new Date(jetzt.getTime() + 30 * 60000);
+      const iso = (d) => d.toISOString();
+      const einstellungen = {
+        ...(alarmData.settings || {}),
+        output: output.value,
+        sound: sound.value,
+        volume: Number(volume.value),
+        stop_mode: stopMode.value,
+        duration_seconds: Number(duration.value),
+      };
+      closeSettings();
+      setTimeout(() => fireAlarm({
+        title: "Probealarm", location: "So sieht eine Terminmeldung aus",
+        calendar: "Test", color: "#4f9cf9", icon: "", all_day: false,
+        start: iso(jetzt), end: iso(bis), lead_minutes: 0,
+      }, einstellungen), 250);
+    },
+  });
+
   // Anzeige
   const days = numberInput(data.view.days, 1, 14);
   const theme = h("select", {},
@@ -416,7 +442,7 @@ function buildForm(data) {
         field("Ende des Tons", stopMode),
         durationField,
         field("Auch bei Terminbeginn", atStart, "für Termine ohne eigene Erinnerung")),
-      h("div", { class: "row-actions" }, preview)),
+      h("div", { class: "row-actions" }, preview, probeAlarm)),
     section("Anzeige", null,
       h("div", { class: "row-grid" },
         field("Anzahl Tage", days, "heute plus die folgenden"),

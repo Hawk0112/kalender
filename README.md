@@ -236,6 +236,11 @@ Im Zahnrad, Abschnitt **Alarm**:
 | Dauer | Sekunden bei festem Ende, voreingestellt 10 |
 | Auch bei Terminbeginn | aus – Termine ohne eigene Erinnerung bleiben still |
 
+Der Knopf **Probealarm** löst eine vollständige Terminmeldung aus, so wie sie
+bei einem echten Termin aussieht — auch dann, wenn die Erinnerungen gerade
+abgeschaltet sind. Damit lässt sich die Anzeige prüfen, ohne auf einen Termin
+zu warten oder einen Lautsprecher angeschlossen zu haben.
+
 Der Knopf **Ton anhören** spielt die aktuelle Auswahl drei Sekunden lang ab —
 je nach Einstellung über den Summer oder über den Lautsprecher. Beim Summer
 klingt der Ton schlichter: Ein Piezo kann nur Tonhöhen, keine Klangfarben, die
