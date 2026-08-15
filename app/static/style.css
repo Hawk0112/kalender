@@ -134,7 +134,10 @@ body:not(.pointer-visible) * { cursor: none !important; }
   font-size: 3.4rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  line-height: 1.05;
+  /* Nicht enger setzen: overflow:hidden schneidet sonst die Unterlaengen ab,
+     etwa das g in "August". */
+  line-height: 1.25;
+  padding-bottom: 0.06em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
