@@ -131,11 +131,12 @@ def main() -> int:
                 zeige(titel_von(block, i), block)
                 print()
 
-    print("\nWorauf zu achten ist: Tragen die Termine mit Erinnerung ein")
-    print("ORGANIZER oder ATTENDEE? Dann stammen sie aus einer Einladung.")
-    print("Andere X-Eigenschaften deuten auf einen Import aus einem anderen")
-    print("Programm hin. Beides erklaert, warum Google dort eine Erinnerung")
-    print("mitliefert, bei selbst angelegten Terminen aber nicht.")
+    print("\nWorauf zu achten ist: Steht bei den Terminen mit Erinnerung ein")
+    print("X-APPLE-CREATOR-IDENTITY? Dann wurden sie in der Kalender-App eines")
+    print("iPhone oder iPad angelegt. Nur dieser Weg legt die Erinnerung als")
+    print("VALARM in den Termin selbst. In der Google-Oberfläche angelegte")
+    print("Erinnerungen bleiben in Googles Benachrichtigungsverwaltung und")
+    print("werden ins ICS-Abo nie exportiert - kein Abo kann sie sehen.")
     return 0
 
 
