@@ -115,7 +115,8 @@ const KEYPAD_GROUPS = [
   { label: "0–9", keys: zeichen("0123456789") },
   { label: "ABC", keys: zeichen("ABCDEFGHIJKLMNOPQRSTUVWXYZ") },
   { label: "äöü", keys: zeichen("äöüßÄÖÜ") },
-  { label: ".:/", keys: zeichen(":/.-_%#?&=@+,!()") },
+  // "!" steht vorne: es ist das voreingestellte Erinnerungszeichen.
+  { label: ".:/", keys: zeichen("!:/.-_%#?&=@+,()") },
   { label: "Bausteine", keys: KEYPAD_SNIPPETS },
   {
     label: "Befehle",

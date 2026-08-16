@@ -264,6 +264,23 @@ aktivierst du, indem du in `~/kalender/config.yaml` bei `calendars` die eckigen
 Klammern löschst und den auskommentierten Demo-Block einfügst — gebraucht wird
 er aber nicht.
 
+### Damit ein Termin läutet
+
+**Google gibt Erinnerungen im ICS-Abo nicht mit.** Was im Google Kalender unter
+„Benachrichtigung" eingestellt ist, bleibt dort und kommt beim Kalender nie an.
+
+Stattdessen entscheidet ein **Zeichen am Anfang des Titels**: Ein Termin, der
+`!Arzt` heißt, meldet sich 30 Minuten vor Beginn. Auf dem Kalender steht dann
+nur „Arzt" mit einer kleinen Glocke davor — das Zeichen selbst wird nicht
+angezeigt.
+
+Das ist alles, was die Angehörigen wissen müssen: **Soll der Kalender läuten,
+ein `!` vor den Titel setzen.** Es funktioniert an jedem Gerät, ob Handy,
+Tablet oder Rechner.
+
+Zeichen und Vorlaufzeit stehen im Zahnrad unter *Erinnerungszeichen*. Dort
+lassen sich auch weitere anlegen, etwa `!!` für eine Stunde vorher.
+
 ---
 
 ## Schritt 8 – Taster und Summer anschließen (optional)

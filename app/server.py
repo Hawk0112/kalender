@@ -188,7 +188,9 @@ def create_app(ctx: AppContext) -> Flask:
                     continue
                 found.extend(
                     expand(
-                        state.calendar, source, start, end, config.tz, config.highlights
+                        state.calendar, source, start, end, config.tz,
+                        config.highlights, config.reminder_marks,
+                        int(config.view["day_start_hour"]),
                     )
                 )
             return found
@@ -270,7 +272,8 @@ def create_app(ctx: AppContext) -> Flask:
                 continue
             for termin in expand(
                 state.calendar, quelle, start, ende, config.tz,
-                config.highlights, with_raw=True,
+                config.highlights, config.reminder_marks,
+                int(config.view["day_start_hour"]), with_raw=True,
             ):
                 if termin["id"] != gesucht:
                     continue
@@ -284,6 +287,7 @@ def create_app(ctx: AppContext) -> Flask:
                     "source_color": termin["source_color"],
                     "highlight": termin["highlight"],
                     "icon": termin["icon"],
+                    "reminder_mark": termin["reminder_mark"],
                     "all_day": termin["all_day"],
                     "start": termin["start"].isoformat(),
                     "end": termin["end"].isoformat(),

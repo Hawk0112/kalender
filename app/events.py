@@ -117,6 +117,41 @@ def raw_properties(component: Any) -> dict[str, Any]:
     return {"eigenschaften": eigenschaften, "unterkomponenten": unter}
 
 
+def match_reminder_mark(title: str, marks: list[dict]) -> tuple[str, dict | None]:
+    """Erinnerungszeichen am Titelanfang abtrennen.
+
+    Liefert den Titel ohne das Zeichen und die passende Regel. Die Liste ist
+    bereits nach Laenge geordnet, das laengste passende Zeichen gewinnt also.
+    """
+    rest = title.lstrip()
+    for rule in marks:
+        if not rest.lower().startswith(rule["mark"].lower()):
+            continue
+        gekuerzt = rest[len(rule["mark"]) :].strip()
+        # Ein Termin, der nur aus dem Zeichen besteht, behaelt seinen Titel -
+        # sonst stuende dort nichts mehr.
+        return (gekuerzt or title), rule
+    return title, None
+
+
+def mark_alarm_time(
+    rule: dict,
+    start: datetime,
+    all_day: bool,
+    tz: tzinfo,
+    all_day_hour: int,
+) -> datetime:
+    """Zeitpunkt der Erinnerung, die aus einem Zeichen entsteht.
+
+    Bei ganztaegigen Terminen gibt es keinen Beginn, an dem sich ein Vorlauf
+    messen liesse - 30 Minuten vor Mitternacht wuerde nachts klingeln. Sie
+    melden sich deshalb zum Beginn des angezeigten Tagesfensters.
+    """
+    if all_day:
+        return datetime.combine(start.date(), time(hour=all_day_hour), tzinfo=tz)
+    return start - timedelta(minutes=int(rule["minutes"]))
+
+
 def match_highlight(title: str, source: dict, highlights: list[dict]) -> dict | None:
     """Erste passende Hervorhebungsregel finden (Titel-Stichwort oder Kalendername)."""
     haystack = title.lower()
@@ -136,6 +171,8 @@ def expand(
     window_end: datetime,
     tz: tzinfo,
     highlights: list[dict] | None = None,
+    marks: list[dict] | None = None,
+    all_day_hour: int = 6,
     with_raw: bool = False,
 ) -> list[dict[str, Any]]:
     """Termine einer Quelle im Fenster expandieren (inkl. Serienterminen)."""
@@ -156,6 +193,10 @@ def expand(
         start, end, all_day = bounds
 
         title = _text(component, "SUMMARY") or "(ohne Titel)"
+        # Das Erinnerungszeichen faellt vor allem anderen weg: Ausschluesse,
+        # Hervorhebungen und die Anzeige sollen den sauberen Titel sehen.
+        title, mark = match_reminder_mark(title, marks or [])
+
         haystack = title.lower()
         if any(term in haystack for term in source["exclude"]):
             continue
@@ -168,6 +209,12 @@ def expand(
         else:
             colour = event_color(component) or source["color"]
 
+        alarms = alarm_times(component, start, end, tz)
+        if mark:
+            moment = mark_alarm_time(mark, start, all_day, tz, all_day_hour)
+            if moment not in alarms:
+                alarms.append(moment)
+
         uid = _text(component, "UID") or title
         eintrag: dict[str, Any] = {
             "id": f"{source['id']}:{uid}:{start.isoformat()}",
@@ -175,12 +222,15 @@ def expand(
             "location": _text(component, "LOCATION"),
             "calendar": source["name"],
             "color": colour,
-            "icon": rule["icon"] if rule else "",
+            # Die Glocke zeigt, dass das Zeichen erkannt wurde - eine eigene
+            # Hervorhebung hat mit ihrem Symbol aber Vorrang.
+            "icon": (rule["icon"] if rule else "") or ("\U0001f514" if mark else ""),
             "highlight": rule["name"] if rule else None,
+            "reminder_mark": mark["mark"] if mark else "",
             "all_day": all_day,
             "start": start,
             "end": end,
-            "alarms": alarm_times(component, start, end, tz),
+            "alarms": alarms,
         }
         if with_raw:
             eintrag["raw"] = raw_properties(component)
@@ -198,10 +248,11 @@ def collect_alarms(
 ) -> list[dict[str, Any]]:
     """Faellige Erinnerungen fuer die Anzeige zusammenstellen.
 
-    Gemeldet wird nur, was im Termin selbst als Erinnerung (VALARM) steht.
-    Termine ohne Erinnerung bleiben still; mit 'at_event_start' melden sie
-    sich zum Beginn. Ganztaegige Termine sind davon ausgenommen - sie wuerden
-    um Mitternacht losgehen.
+    Gemeldet wird, was der Termin selbst als Erinnerung (VALARM) mitbringt,
+    dazu die Erinnerungen aus einem Zeichen am Titelanfang. Alles andere
+    bleibt still; mit 'at_event_start' melden sich auch Termine ohne jede
+    Erinnerung zum Beginn. Ganztaegige Termine sind davon ausgenommen - sie
+    wuerden um Mitternacht losgehen.
     """
     earliest = now - timedelta(seconds=grace_seconds)
     seen: set[str] = set()

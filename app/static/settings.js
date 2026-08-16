@@ -196,6 +196,55 @@ function highlightRow(rule, palette) {
   return row;
 }
 
+/* Vorlaufzeiten als Liste statt als Zahlenfeld: Mit den drei Tastern muesste
+   man sich sonst in Einerschritten bis 1440 durchdruecken. */
+const MARK_MINUTES = [0, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240, 360, 480, 720, 1440];
+
+function minutesLabel(minutes) {
+  if (minutes === 0) return "zum Terminbeginn";
+  if (minutes < 60) return `${minutes} Minuten vorher`;
+  const stunden = minutes / 60;
+  const text = Number.isInteger(stunden) ? String(stunden) : String(stunden).replace(".", ",");
+  return `${text} ${stunden === 1 ? "Stunde" : "Stunden"} vorher`;
+}
+
+function minutesSelect(value, maxMinutes) {
+  const gewaehlt = Number(value ?? 30);
+  const werte = MARK_MINUTES.filter((m) => m <= maxMinutes);
+  // Ein von Hand in die config.yaml geschriebener Wert soll beim Speichern
+  // ueber die Oberflaeche nicht verlorengehen.
+  if (!werte.includes(gewaehlt) && gewaehlt >= 0 && gewaehlt <= maxMinutes) {
+    werte.push(gewaehlt);
+    werte.sort((a, b) => a - b);
+  }
+  return h("select", {},
+    ...werte.map((m) => h("option", {
+      value: m, text: minutesLabel(m), selected: m === gewaehlt,
+    })));
+}
+
+/* Zeichen am Titelanfang, das eine Erinnerung ausloest. */
+function markRow(rule, maxMinutes, maxLength) {
+  const mark = h("input", {
+    type: "text", value: rule.mark || "", placeholder: "!",
+    maxlength: maxLength, class: "icon",
+  });
+  const minutes = minutesSelect(rule.minutes, maxMinutes);
+
+  const row = h("div", { class: "row" },
+    h("div", { class: "row-grid" },
+      field("Zeichen am Titelanfang", mark, "z. B. ! oder !!"),
+      field("Erinnerung", minutes, "bei ganztägigen Terminen: Beginn des Zeitfensters")),
+    h("div", { class: "row-actions" },
+      h("button", {
+        type: "button", class: "ghost danger", text: "Entfernen",
+        onclick: () => row.remove(),
+      })));
+
+  row.collect = () => ({ mark: mark.value.trim(), minutes: Number(minutes.value) });
+  return row;
+}
+
 /* ---------- Formular aufbauen ---------- */
 
 function buildForm(data) {
@@ -253,6 +302,16 @@ function buildForm(data) {
   const addHighlight = h("button", {
     type: "button", class: "ghost add", text: "+ Hervorhebung hinzufügen",
     onclick: () => highlightList.append(highlightRow({ color: "#ff4fa3" }, palette)),
+  });
+
+  // Erinnerungszeichen
+  const markMax = data.mark_max_minutes || 1440;
+  const markLen = data.mark_max_length || 4;
+  const markList = h("div", { class: "list" },
+    ...(data.reminder_marks || []).map((rule) => markRow(rule, markMax, markLen)));
+  const addMark = h("button", {
+    type: "button", class: "ghost add", text: "+ Zeichen hinzufügen",
+    onclick: () => markList.append(markRow({ mark: "", minutes: 30 }, markMax, markLen)),
   });
 
   // Alarm
@@ -430,6 +489,9 @@ function buildForm(data) {
       h("div", { class: "row-actions" },
         refreshNow, refreshResult,
         h("span", { class: "fhint", text: "holt die gespeicherten Kalender sofort neu" }))),
+    section("Erinnerungszeichen",
+      "Google liefert die im Kalender eingestellten Erinnerungen nicht mit. Wer den Termin „!Arzt“ nennt, bekommt hier trotzdem eine – das Zeichen wird in der Anzeige weggelassen, stattdessen erscheint eine Glocke. Ganztägige Termine melden sich zu Beginn des Zeitfensters.",
+      markList, addMark),
     section("Hervorhebungen", "Termine, die auffallen sollen – unabhängig vom Kalender.",
       highlightList, addHighlight),
     section("Alarm",
@@ -512,6 +574,7 @@ function buildForm(data) {
       .filter((row) => typeof row.collect === "function")
       .map((row) => row.collect()),
     highlights: [...highlightList.querySelectorAll(".row")].map((row) => row.collect()),
+    reminder_marks: [...markList.querySelectorAll(".row")].map((row) => row.collect()),
   });
 }
 

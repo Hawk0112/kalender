@@ -72,6 +72,10 @@ function detailsRender(d) {
     detailsZeile("Farbe", detailsFarbe(d.color)),
     detailsZeile("Farbe des Kalenders", detailsFarbe(d.source_color)),
     detailsZeile("Hervorhebung", d.highlight ? `${d.highlight} ${d.icon}` : "keine"),
+    detailsZeile(
+      "Erinnerungszeichen",
+      d.reminder_mark ? `„${d.reminder_mark}“ am Titelanfang erkannt` : "keines",
+    ),
   );
 
   const alarme = d.alarms || [];
@@ -81,7 +85,8 @@ function detailsRender(d) {
   if (!alarme.length) {
     detailsEl.body.append(detailsZeile(
       "keine",
-      "Dieser Termin bringt keine Erinnerung mit (VALARM fehlt).",
+      "Dieser Termin bringt keine Erinnerung mit (VALARM fehlt) und trägt kein "
+      + "Erinnerungszeichen am Titelanfang.",
       "detail-hint",
     ));
   } else {

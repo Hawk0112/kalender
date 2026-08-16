@@ -82,6 +82,17 @@ DEFAULTS: dict[str, Any] = {
         "combo_hold_seconds": 10.0,
     },
     "calendars": [],
+    # Zeichen am Anfang des Termintitels, die eine Erinnerung ausloesen.
+    #
+    # Google gibt im ICS-Abo keine Erinnerungen mit: Was dort eingestellt wird,
+    # bleibt in Googles eigener Benachrichtigung und steht nicht im Termin.
+    # Wer den Termin "!Arzt" nennt, bekommt hier trotzdem eine Erinnerung -
+    # standardmaessig 30 Minuten vor Beginn. Das Zeichen wird in der Anzeige
+    # abgeschnitten, dafuer erscheint eine Glocke am Termin.
+    #
+    # Mehrere Eintraege sind moeglich, z. B. "!!" fuer eine Stunde vorher.
+    # Laengere Zeichen gewinnen, "!!" geht also vor "!".
+    "reminder_marks": [{"mark": "!", "minutes": 30}],
     # Termine, die auffallen sollen - unabhaengig davon, aus welchem Kalender
     # sie stammen. Greift ueber Stichwoerter im Titel oder ueber den Kalendernamen.
     "highlights": [
@@ -122,6 +133,11 @@ THEME_IDS = {theme["id"] for theme in THEMES}
 # Sicherheitsnetz fuer den Modus "bis zur Tasteneingabe": Wenn niemand da ist,
 # soll der Ton nicht endlos laufen.
 ALARM_HARD_LIMIT_SECONDS = 300
+
+# Grenzen fuer die Erinnerungszeichen. Mehr als 24 Stunden Vorlauf ergibt auf
+# einem Wandkalender keinen Sinn, und ein Zeichen bleibt ein Zeichen.
+MARK_MAX_MINUTES = 1440
+MARK_MAX_LENGTH = 4
 
 PALETTE = [
     "#4f9cf9",
@@ -182,6 +198,10 @@ class Config:
         return self.data["highlights"]
 
     @property
+    def reminder_marks(self) -> list[dict[str, Any]]:
+        return self.data["reminder_marks"]
+
+    @property
     def alarm(self) -> dict[str, Any]:
         return self.data["alarm"]
 
@@ -209,6 +229,7 @@ def load_config(path: str | Path) -> Config:
     data = _merge(DEFAULTS, raw)
     data["calendars"] = _normalise_calendars(data.get("calendars"), path.parent)
     data["highlights"] = _normalise_highlights(data.get("highlights"))
+    data["reminder_marks"] = _normalise_marks(data.get("reminder_marks"))
 
     view = data["view"]
     view["days"] = max(1, min(14, int(view["days"])))
@@ -341,6 +362,49 @@ def _as_list(value: Any) -> list[str]:
     return [str(item) for item in value]
 
 
+def _normalise_marks(entries: Any) -> list[dict[str, Any]]:
+    """Erinnerungszeichen pruefen und nach Laenge ordnen.
+
+    Die laengeren zuerst: sonst wuerde bei "!!Arzt" die Regel fuer "!" greifen
+    und die fuer "!!" nie zum Zug kommen.
+    """
+    if entries is None:
+        return []
+    if not isinstance(entries, list):
+        raise ConfigError("'reminder_marks' muss eine Liste sein.")
+
+    result: list[dict[str, Any]] = []
+    gesehen: set[str] = set()
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            raise ConfigError(f"reminder_marks[{index}]: erwartet ein Objekt.")
+        mark = str(entry.get("mark") or "").strip()
+        if not mark:
+            raise ConfigError(f"reminder_marks[{index}]: 'mark' fehlt.")
+        if len(mark) > MARK_MAX_LENGTH:
+            raise ConfigError(
+                f"reminder_marks[{index}]: Zeichen darf hoechstens "
+                f"{MARK_MAX_LENGTH} Stellen haben."
+            )
+        if mark.lower() in gesehen:
+            raise ConfigError(f"reminder_marks[{index}]: Zeichen {mark!r} ist doppelt.")
+        gesehen.add(mark.lower())
+
+        try:
+            minutes = int(entry.get("minutes", 30))
+        except (TypeError, ValueError):
+            raise ConfigError(f"reminder_marks[{index}]: 'minutes' muss eine Zahl sein.") from None
+        if not 0 <= minutes <= MARK_MAX_MINUTES:
+            raise ConfigError(
+                f"reminder_marks[{index}]: 'minutes' muss zwischen 0 und "
+                f"{MARK_MAX_MINUTES} liegen."
+            )
+        result.append({"mark": mark, "minutes": minutes})
+
+    result.sort(key=lambda rule: len(rule["mark"]), reverse=True)
+    return result
+
+
 def _normalise_highlights(entries: Any) -> list[dict[str, Any]]:
     if not entries:
         return []
@@ -443,6 +507,12 @@ def editable_settings(config: Config) -> dict[str, Any]:
             }
             for rule in config.highlights
         ],
+        "reminder_marks": [
+            {"mark": rule["mark"], "minutes": rule["minutes"]}
+            for rule in config.reminder_marks
+        ],
+        "mark_max_minutes": MARK_MAX_MINUTES,
+        "mark_max_length": MARK_MAX_LENGTH,
         "palette": PALETTE,
     }
 
@@ -580,6 +650,29 @@ def settings_to_raw(payload: Any, previous: Config) -> dict[str, Any]:
             rule["icon"] = str(entry["icon"]).strip()[:4]
         highlights.append(rule)
 
+    marks = []
+    seen_marks: set[str] = set()
+    for index, entry in enumerate(payload.get("reminder_marks") or [], start=1):
+        if not isinstance(entry, dict):
+            raise ConfigError(f"Erinnerungszeichen {index}: ungueltiger Eintrag.")
+        mark = str(entry.get("mark") or "").strip()
+        if not mark:
+            raise ConfigError(f"Erinnerungszeichen {index}: Zeichen fehlt.")
+        if len(mark) > MARK_MAX_LENGTH:
+            raise ConfigError(
+                f"Erinnerungszeichen „{mark}“: hoechstens {MARK_MAX_LENGTH} Stellen."
+            )
+        if mark.lower() in seen_marks:
+            raise ConfigError(f"Erinnerungszeichen „{mark}“ ist doppelt eingetragen.")
+        seen_marks.add(mark.lower())
+        marks.append({
+            "mark": mark,
+            "minutes": _clamp_int(
+                entry.get("minutes", 30), 0, MARK_MAX_MINUTES,
+                f"Erinnerungszeichen „{mark}“",
+            ),
+        })
+
     refresh_in = payload.get("refresh") or {}
     previous_refresh = previous.refresh
 
@@ -633,6 +726,7 @@ def settings_to_raw(payload: Any, previous: Config) -> dict[str, Any]:
         # Der Taster wird nur in der Datei eingestellt - unveraendert uebernehmen,
         # damit das Speichern ueber die Oberflaeche ihn nicht entfernt.
         "button": dict(previous.button),
+        "reminder_marks": marks,
         "highlights": highlights,
         "calendars": calendars,
     }

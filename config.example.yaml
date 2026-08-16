@@ -97,6 +97,24 @@ button:
   # versehentlich hineingeraet. 0 schaltet das ab.
   combo_hold_seconds: 10.0
 
+# Zeichen am Anfang des Termintitels, die eine Erinnerung ausloesen.
+#
+# Hintergrund: Google gibt im ICS-Abo keine Erinnerungen mit. Was im Google
+# Kalender eingestellt wird, bleibt in dessen eigener Benachrichtigung und
+# steht nicht im Termin. Wer den Termin "!Arzt" nennt, bekommt hier trotzdem
+# eine Erinnerung. Das Zeichen wird in der Anzeige weggelassen, dafuer
+# erscheint eine Glocke am Termin.
+#
+# Laengere Zeichen gewinnen: bei "!!Arzt" greift die Regel fuer "!!".
+# Ganztaegige Termine melden sich zu Beginn des Zeitfensters (day_start_hour),
+# weil "30 Minuten vor Mitternacht" nachts klingeln wuerde.
+reminder_marks:
+  - mark: "!"
+    minutes: 30
+
+  # - mark: "!!"
+  #   minutes: 60
+
 # Auffaellige Termine: ueberschreiben Farbe und stellen ein Symbol voran.
 # Getroffen wird ueber Stichwoerter im Titel (Gross-/Kleinschreibung egal)
 # oder ueber den Namen eines ganzen Kalenders.

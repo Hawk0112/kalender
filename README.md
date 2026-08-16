@@ -117,6 +117,7 @@ Alles ist auch direkt in der Datei einstellbar – manches gibt es nur dort
 | `view.days` | Anzahl der Spalten (7 = heute + 6 Tage) |
 | `view.day_start_hour` / `day_end_hour` | Zeitfenster des Stundenrasters, voreingestellt 6–22; Termine außerhalb landen in den Sammelzeilen, siehe oben |
 | `highlights` | auffällige Termine, siehe oben |
+| `reminder_marks` | Zeichen am Titelanfang, die eine Erinnerung auslösen, siehe oben |
 | `alarm` | Alarmton bei Erinnerungen, siehe oben |
 | `button` | Taster am GPIO, siehe oben (nur in der Datei einstellbar) |
 | `view.theme` | `dark` (helle Schrift auf dunklem Grund, Vorgabe) oder `light` |
@@ -181,6 +182,35 @@ Termins sowie feste Zeitpunkte.
 diese zum Terminbeginn melden, schaltet „Auch bei Terminbeginn" ein; ganztägige
 Termine sind davon ausgenommen, sonst klingelte es um Mitternacht.
 
+### Erinnerungszeichen im Titel
+
+Google liefert Erinnerungen im ICS-Abo **nicht** mit (siehe unten). Damit
+trotzdem einzelne Termine läuten können, wertet der Kalender ein **Zeichen am
+Anfang des Titels** aus. Voreingestellt ist `!` mit 30 Minuten Vorlauf: Wer den
+Termin `!Arzt` nennt, wird um 13:30 an den Termin um 14:00 erinnert.
+
+Das Zeichen wird in der Anzeige **weggelassen** – auf dem Kalender steht
+schlicht „Arzt". Stattdessen erscheint eine **Glocke** am Termin, damit
+erkennbar bleibt, dass er sich melden wird.
+
+Zeichen und Vorlaufzeit sind im Einstellungsdialog änderbar, und es lassen sich
+weitere hinzufügen – etwa `!!` für eine Stunde vorher. **Das längere Zeichen
+gewinnt:** bei `!!Zahnarzt` greift die Regel für `!!`, nicht die für `!`.
+
+```yaml
+reminder_marks:
+  - mark: "!"
+    minutes: 30
+  - mark: "!!"
+    minutes: 60
+```
+
+Ganztägige Termine melden sich zu Beginn des angezeigten Zeitfensters
+(`view.day_start_hour`, voreingestellt 06:00) – ein Vorlauf vor Mitternacht
+würde nachts klingeln. Eine echte Erinnerung im Termin (`VALARM`) bleibt
+daneben gültig; beide Zeitpunkte läuten. Eine leere Liste schaltet die Funktion
+ab.
+
 Neben der Uhr steht eine **Glocke**: durchgestrichen und gelb, solange die
 Erinnerungen abgeschaltet sind, sonst unauffällig grau. So fällt beim nächsten
 Blick auf, wenn der Schalter versehentlich umgelegt wurde — bei einem Gerät,
@@ -194,10 +224,9 @@ cd ~/kalender && .venv/bin/python tools/erinnerungen.py
 ```
 
 Es stellt die Termine mit Erinnerung denen ohne gegenüber und zeigt zu jedem
-die verräterischen Eigenschaften: `ORGANIZER` und `ATTENDEE` deuten auf eine
-Einladung von jemand anderem hin, `X-`Eigenschaften auf einen Import aus einem
-anderen Programm. Beides erklärt, warum Google dort eine Erinnerung mitliefert,
-bei selbst angelegten Terminen aber nicht.
+die verräterischen Eigenschaften. Mit `--anonym` werden Titel, Beschreibungen,
+Orte und Adressen durch Angaben über ihre Länge ersetzt – übrig bleibt die
+Struktur, die Ausgabe lässt sich also weitergeben.
 
 Ob eine Quelle überhaupt Erinnerungen mitliefert, lässt sich auch kurz prüfen:
 
@@ -215,8 +244,22 @@ for q in c.calendars:
 "
 ```
 
-Google liefert Erinnerungen nur mit, wenn sie am Termin ausdrücklich gesetzt
-wurden — bei der Standard-Benachrichtigung des Kalenders fehlen sie im Abo.
+### Warum Google keine Erinnerungen liefert
+
+Die Auswertung eines echten Kalenders hat es eindeutig gezeigt: Termine mit
+`VALARM` tragen die Eigenschaft `X-APPLE-CREATOR-IDENTITY`, wurden also in der
+Kalender-App eines iPhone oder iPad angelegt und per CalDAV ins Google-Konto
+geschrieben. Nur dieser Weg legt die Erinnerung **in den Termin selbst**, und
+Google gibt sie unverändert weiter.
+
+Eine in der Google-Oberfläche gesetzte Erinnerung bleibt dagegen in Googles
+eigener Benachrichtigungsverwaltung, die am Konto hängt. Sie steht nicht im
+Termin und wird ins ICS-Abo **nie** exportiert – kein Abo dieser Welt kann sie
+sehen. Deshalb gibt es die Erinnerungszeichen (siehe oben).
+
+Wer die Erinnerungen direkt aus dem Kalender übernehmen will, braucht einen
+Server, der sich an den Standard hält und sie im Termin speichert – etwa
+Nextcloud oder einen anderen CalDAV-Anbieter.
 
 ### Wo der Ton herauskommt
 
@@ -249,6 +292,10 @@ Im Zahnrad, Abschnitt **Alarm**:
 | Ende des Tons | „nach fester Dauer" oder „bei Tasteneingabe" |
 | Dauer | Sekunden bei festem Ende, voreingestellt 10 |
 | Auch bei Terminbeginn | aus – Termine ohne eigene Erinnerung bleiben still |
+
+Im Abschnitt **Erinnerungszeichen** stehen darüber die Zeichen, die eine
+Erinnerung auslösen: je Zeile das Zeichen und die Vorlaufzeit, dazu Knöpfe zum
+Hinzufügen und Entfernen.
 
 Der Knopf **Probealarm** löst eine vollständige Terminmeldung aus, so wie sie
 bei einem echten Termin aussieht — auch dann, wenn die Erinnerungen gerade
@@ -531,9 +578,10 @@ was über ihn bekannt ist:
 * **So zeigt der Kalender ihn an** — Titel, Kalender, Beginn und Ende (lesbar
   und als Zeitstempel), ganztägig ja/nein, Ort, verwendete Farbe, Farbe des
   Kalenders, angewandte Hervorhebung
-* **Erinnerungen** — jeder Zeitpunkt mit Vorlauf in Minuten. Bringt der Termin
-  keine mit, steht dort ausdrücklich „Dieser Termin bringt keine Erinnerung
-  mit (VALARM fehlt)"
+* **Erinnerungen** — jeder Zeitpunkt mit Vorlauf in Minuten, gleich ob er aus
+  dem Termin (`VALARM`) oder aus einem Erinnerungszeichen stammt. Gibt es
+  keinen, steht dort ausdrücklich, dass weder das eine noch das andere
+  vorliegt. Eine eigene Zeile nennt das erkannte Erinnerungszeichen
 * **Rohdaten aus dem Kalender** — sämtliche Eigenschaften unverändert, samt
   Parametern wie `TZID`, dazu Unterabschnitte wie `VALARM`
 
